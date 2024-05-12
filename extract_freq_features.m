@@ -31,7 +31,7 @@ Pxx_avg = zeros(1,NFFT);
 for ni = 1:length(n) % no. sliding windows in one segment
     
     x_segment      = x( n(ni) : n(ni)+L-1 ).';
-    X_segment      = fft(x_segment.*hanning(L).', NFFT); % two-sided FFT of x, real-valued
+    X_segment = fft(double(x_segment) .* hanning(L).', NFFT); % two-sided FFT of x, real-valued
     Axx_segment    = sqrt(X_segment.*conj(X_segment))/L; % two-sided FFT amplitude spectrum of x, real-valued
     Axx_segment_ss = 2*Axx_segment(1:end/2);             % single-sided FFT amplitude spectrum of x, real-valued
     Pxx_segment    = Axx_segment.^2;                     % two-sided FFT power spectrum of x, real-valued

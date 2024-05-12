@@ -25,6 +25,9 @@ function [features_time] = extract_time_features(x, fs)
 features_time = [];
 
 
+%% Convert input data to single or double
+x = double(x); % Convert to double data type
+
 %% Time
 t = 1/fs:1/fs:length(x)/fs; %[s]
 
