@@ -72,7 +72,10 @@ Notes:
 
 (3) the scripts allows you to extract all features for the EEG. In case of EMG signal, you will not have the band power features (that are specific for EEG).
 
-
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Todo:
+ 1. Clean and segment the signals (function that does that)
+ 2. Feature Extraction
 
 
 Citation reference:
