@@ -3,14 +3,14 @@
 function [features_freq, Pxx_avg, f] = extract_freq_features(x, fs)
 % -- Frequency domain uni-dimensional features --
 %
-% MNF: mean frequency (in power spectrum)
-% MDF: median frequency (in power spectrum)
-% SPC: spectral centroid (see https://en.wikipedia.org/wiki/Spectral_centroid)
-% BPd: band power in delta band (0.5,4) Hz
-% BPt: band power in theta band (4,8) Hz
-% BPa: band power in alpha band (8,13) Hz
-% BPb: band power in beta band  (13,30) Hz
-% BPg: band power in gamma band >=30 Hz
+% 17: MNF: mean frequency (in power spectrum)
+% 18: MDF: median frequency (in power spectrum)
+% 19: SPC: spectral centroid (see https://en.wikipedia.org/wiki/Spectral_centroid)
+% 20: BPd: band power in delta band (0.5,4) Hz
+% 21: BPt: band power in theta band (4,8) Hz
+% 22: BPa: band power in alpha band (8,13) Hz
+% 23: BPb: band power in beta band  (13,30) Hz
+% 24: BPg: band power in gamma band >=30 Hz
 
 
 

@@ -93,30 +93,30 @@ sampling_frequency_eeg = 250; % Hz
 % Loop over subjects
 for s = 1:length(subjects)
     subject_directory = fullfile(data_directory, subjects{s});
-    
+
     % Extract subject number from directory name using regular expression
     subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
     subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
-    
+
     % Loop over repetitions
     for r = 1:length(repetitions)
-        
+
         % Loop over gestures
         for g = 1:length(gestures)
             % Construct the filename using the correct format
             eeg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
-            
+
             % Check if the file exists
             if exist(eeg_filename, 'file')
                 % Load EEG data
                 eeg_data = load(eeg_filename);
-                
-                % Access the EEG data from the loaded file
-                dataset = eeg_data.data; 
-                
+
+                % Access the EEG data from the loaded file and transpose
+                dataset = permute(eeg_data.data, [2, 1, 3]); % Transpose data matrix
+
                 % Perform feature extraction
                 [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_eeg, 'eeg');
-                
+
                 % Now you can use the extracted features and parameters
                 % For example, you can save the features for each subject, repetition, and task
                 save_filename = fullfile('EEG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
@@ -187,4 +187,28 @@ for i = 1:min(size(eeg_signals, 2), 8) % Plot up to the first 4 channels
     title(['EEG Signal Channel ', num2str(i)]);
     grid on;
 end
+
+
+num_features = size(features, 1);
+
+disp(['Number of features: ', num2str(num_features)]);
+
+% Choose a specific feature index (e.g., 1 for MIN)
+feature_index = 2;
+
+% Extract the feature values for the chosen feature index
+feature_values = squeeze(features(feature_index, :, :)); % NCH x NTRIALS
+
+% Calculate statistics
+mean_feature = mean(feature_values, 2); % Mean across trials for each channel
+median_feature = median(feature_values, 2); % Median across trials for each channel
+std_feature = std(feature_values, 0, 2); % Standard deviation across trials for each channel
+range_feature = range(feature_values, 2); % Range across trials for each channel
+
+% Display the statistics
+disp('Statistics for the chosen feature:')
+disp(['Mean: ', num2str(mean_feature')])
+disp(['Median: ', num2str(median_feature')])
+disp(['Standard Deviation: ', num2str(std_feature')])
+disp(['Range: ', num2str(range_feature')])
 

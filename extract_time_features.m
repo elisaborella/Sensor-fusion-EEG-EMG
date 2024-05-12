@@ -3,22 +3,22 @@
 function [features_time] = extract_time_features(x, fs)
 % -- Time domain uni-dimensional features --
 %
-% MIN:  min amplitude value
-% MAX:  max amplitude value
-% MEAN: mean amplitude value
-% MED:  median amplitude value
-% SD:   standard deviation from the mean
-% VAR:  variance from the mean
-% PP:   peak-to-peak distance (range)
-% ZC:   zero-crossings
-% AUC:  area under curve
-% RMS:  root mean square (entire segment)
-% MP:   mean (amplitude) power
-% MAV:  mean absolute value
-% EN:  signal's energy. Could be computed also in the frequency domain (area under the power spectrum curve). See Parseval's theorem.
-% WL:   waveform length
-% SK:   skewness
-% KUR:  kurtosis
+% 1: MIN:  min amplitude value
+% 2: MAX:  max amplitude value
+% 3: MEAN: mean amplitude value
+% 4: MED:  median amplitude value
+% 5: SD:   standard deviation from the mean
+% 6: VAR:  variance from the mean
+% 7: PP:   peak-to-peak distance (range)
+% 8: ZC:   zero-crossings
+% 9: AUC:  area under curve
+% 10: RMS:  root mean square (entire segment)
+% 11: MP:   mean (amplitude) power
+% 12: MAV:  mean absolute value
+% 13: EN:  signal's energy. Could be computed also in the frequency domain (area under the power spectrum curve). See Parseval's theorem.
+% 14: WL:   waveform length
+% 15: SK:   skewness
+% 16: KUR:  kurtosis
 
 
 %% Initialization
