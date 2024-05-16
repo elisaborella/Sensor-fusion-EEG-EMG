@@ -94,20 +94,7 @@ for s = 1:length(subjects)
     end
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+%% EMG signals
 % Load the data
 data = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
 
@@ -115,10 +102,10 @@ data = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
 emg_signals = data.data;
 
 % Sampling frequency
-fs = 200;
+fs_emg = 200;
 
 % Time vector
-t = (0:size(emg_signals, 1)-1) / fs;
+t = (0:size(emg_signals, 1)-1) / fs_emg;
 
 % Plot some sample EMG signals
 figure;
@@ -131,19 +118,21 @@ for i = 1:min(size(emg_signals, 2), 8) % Plot up to the first 4 channels
     grid on;
 end
 
+%% EEG Signals
+
 % Load the data
 data = load('BMIS_EEG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
 
-% Access the EMG signals
+% Access the EEG signals
 eeg_signals = permute(data.data, [2, 1, 3]);
 
 % Sampling frequency
-fs = 250;
+fs_eeg = 250;
 
 % Time vector
-t = (0:size(eeg_signals, 1)-1) / fs;
+t = (0:size(eeg_signals, 1)-1) / fs_eeg;
 
-% Plot some sample EMG signals
+% Plot some sample EEG signals
 figure;
 for i = 1:min(size(eeg_signals, 2), 8) % Plot up to the first 4 channels
     subplot(min(size(eeg_signals, 2), 8), 1, i);
@@ -153,7 +142,6 @@ for i = 1:min(size(eeg_signals, 2), 8) % Plot up to the first 4 channels
     title(['EEG Signal Channel ', num2str(i)]);
     grid on;
 end
-
 
 num_features = size(features, 1);
 
@@ -168,7 +156,7 @@ feature_values = squeeze(features(feature_index, :, :)); % NCH x NTRIALS
 % Calculate statistics
 mean_feature = mean(feature_values, 2); % Mean across trials for each channel
 median_feature = median(feature_values, 2); % Median across trials for each channel
-std_feature = std(feature_values, 0, 2); % Standard deviation across trials for each channel
+std_feature = std(feature_values, 0, 2); % Standard deviation across trials for each 6channel
 range_feature = range(feature_values, 2); % Range across trials for each channel
 
 % Display the statistics
@@ -178,3 +166,15 @@ disp(['Median: ', num2str(median_feature')])
 disp(['Standard Deviation: ', num2str(std_feature')])
 disp(['Range: ', num2str(range_feature')])
 
+%% Preprocessing
+
+%% CMC
+DUR = 4; % Duration of segment (s)
+clear S_x;
+clear S_y;
+clear S_xy;
+[S_x, S_y, S_xy] = compute_power_spectrum(eeg_signals, double(emg_signals), DUR, fs_eeg, fs_emg);
+
+temp = S_x .* S_y;
+norma = abs(S_xy)^2;
+CMC =  norma / temp;
