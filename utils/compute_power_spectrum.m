@@ -1,4 +1,4 @@
-function [S_x, S_y, S_xy] = compute_power_spectrum(eeg_signals, emg_signals, DUR, Fs_eeg, Fs_emg)
+function [S_x, S_y, S_xy, p_eeg] = compute_power_spectrum(eeg_signals, emg_signals, DUR, Fs_eeg, Fs_emg)
     % COMPUTE_POWER_SPECTRUM Calcola lo spettro di potenza di ogni canale EEG e lo spettro di potenza incrociato
     %   eeg_signals: matrice in cui ogni colonna rappresenta un canale EEG
     %   emg_signals: matrice in cui ogni colonna rappresenta un canale EMG
@@ -12,64 +12,53 @@ function [S_x, S_y, S_xy] = compute_power_spectrum(eeg_signals, emg_signals, DUR
     % Parametri
     [n_samples_eeg, n_channels_eeg] = size(eeg_signals); % numero di campioni e canali EEG
     [n_samples_emg, n_channels_emg] = size(emg_signals); % numero di campioni e canali EMG
-    
-    % Verifica che abbiano lo stesso numero di canali
-    if n_channels_eeg ~= n_channels_emg
-        error('I segnali devono avere lo stesso numero di canali.');
-    end
-    
-    n_channels = n_channels_eeg;
-    
-    ts_eeg = n_samples_eeg * Fs_eeg;
-    ts_emg = n_samples_emg * Fs_emg;
-    
-    % Numero di segmenti
-    n_segments_eeg = floor(ts_eeg / DUR);
-    n_segments_emg = floor(ts_emg / DUR);
-    
-    % Numero minimo di segmenti tra i due segnali
-    n_segments = min(n_segments_eeg, n_segments_emg);
-    
-    % Prealloca le matrici per gli spettri di potenza e lo spettro di potenza incrociato
-    S_x = zeros(floor(n_segments / 2) + 1, n_channels);
-    S_y = zeros(floor(n_segments / 2) + 1, n_channels);
-    S_xy = zeros(floor(n_segments / 2) + 1, n_channels);
 
-    % Calcola la potenza spettrale per ogni segmento e canale
-    for segment = 1:n_segments
-        for channel = 1:n_channels
-            % Estrai il segmento per il canale corrente
-            eeg_segment = eeg_signals((segment-1)*DUR + (1:DUR), channel);
-            emg_segment = emg_signals((segment-1)*DUR + (1:DUR), channel);
+    n_samples = min(n_samples_emg, n_samples_eeg);
+    n_channels = min(n_channels_emg, n_channels_eeg);
+
+    % Uniformare la lunghezza dei segnali tramite resampling
+    [p_eeg, q_eeg] = rat(Fs_emg / Fs_eeg);
+    eeg_resampled = resample(eeg_signals, p_eeg, q_eeg);
+
+    % Ridimensionare EMG per corrispondere a EEG resampled
+    [p_emg, q_emg] = rat(Fs_eeg / Fs_emg);
+    emg_resampled = resample(emg_signals, p_emg, q_emg);
+
+    % Determinare il numero di segmenti per l'analisi della durata specificata
+    segment_length = DUR * Fs_eeg; % numero di campioni per segmento
+    n_segments = floor(n_samples / segment_length); % numero di segmenti completi
+
+    % Inizializzare matrici per i risultati
+    S_x = zeros(segment_length/2+1, n_channels, n_segments);
+    S_y = zeros(segment_length/2+1, n_channels, n_segments);
+    S_xy = zeros(segment_length/2+1, n_channels, n_segments);
+
+    % Loop su ogni segmento
+    for seg = 1:n_segments
+        for i = 1:n_channels
+            % Segmentare il segnale EEG
+            segment_eeg = eeg_resampled((seg-1)*segment_length+1:seg*segment_length, i);
+            % Calcolare la DFT e lo spettro di potenza
+            eeg_dft = fft(segment_eeg);
+            s_x = abs(eeg_dft / segment_length).^2;
+            S_x(:, i, seg) = s_x(1:segment_length/2+1);
+       
+            % Segmentare il segnale EMG
+            segment_emg = emg_resampled((seg-1)*segment_length+1:seg*segment_length, i);
+            % Calcolare la DFT e lo spettro di potenza
+            emg_dft = fft(segment_emg);
+            s_y = abs(emg_dft / segment_length).^2;
+            S_y(:, i, seg) = s_y(1:segment_length/2+1);
+        
+            % Calcolare lo spettro di potenza incrociato tra i canali corrispondenti
+            segment_eeg = eeg_resampled((seg-1)*segment_length+1:seg*segment_length, i);
+            segment_emg = emg_resampled((seg-1)*segment_length+1:seg*segment_length, i);
             
-            % Calcola la FFT per entrambi i segnali
-            fft_result_eeg = fft(eeg_segment);
-            fft_result_emg = fft(emg_segment);
+            eeg_dft = fft(segment_eeg);
+            emg_dft = fft(segment_emg);
             
-            % Calcola lo spettro di potenza per il primo segnale
-            P2_eeg = abs(fft_result_eeg / DUR);
-            P1_eeg = P2_eeg(1:floor(DUR / 2) + 1);
-            P1_eeg(2:end-1) = 2 * P1_eeg(2:end-1);
-            
-            % Calcola lo spettro di potenza per il secondo segnale
-            P2_emg = abs(fft_result_emg / DUR);
-            P1_emg = P2_emg(1:floor(DUR / 2) + 1);
-            P1_emg(2:end-1) = 2 * P1_emg(2:end-1);
-            
-            % Calcola lo spettro di potenza incrociato
-            cross_P2 = fft_result_eeg(1:length(P1_eeg)) .* conj(fft_result_emg(1:length(P1_eeg))) / sqrt(DUR * DUR);
-            cross_P1 = abs(cross_P2(1:floor(DUR / 2) + 1));
-            cross_P1(2:end-1) = 2 * cross_P1(2:end-1);
-            
-            % Accumula gli spettri di potenza e incrociati nelle rispettive matrici
-            S_x(:, channel) = S_x(:, channel) + P1_eeg;
-            S_y(:, channel) = S_y(:, channel) + P1_emg;
-            S_xy(:, channel) = S_xy(:, channel) + cross_P1;
+            s_xy = eeg_dft .* conj(emg_dft) / segment_length;
+            S_xy(:, i, seg) = abs(s_xy(1:segment_length/2+1));
         end
     end
-    
-    % Media gli spettri di potenza e incrociati sui segmenti
-    S_x = S_x / n_segments;
-    S_y = S_y / n_segments;
-    S_xy = S_xy / n_segments;
 end
