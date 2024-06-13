@@ -7,47 +7,47 @@ subjects = subjects(3:end); % Remove '.' and '..' directories
 gestures = {'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7'}; % List of gesture names
 repetitions = {'R1', 'R2', 'R3', 'R4', 'R5', 'R6'}; % List of repetition names
 sampling_frequency_emg = 200; % Hz
-
-% Loop over subjects
-for s = 1:length(subjects)
-    subject_directory = fullfile(data_directory, subjects{s});
-
-    % Extract subject number from directory name using regular
-    % expression
-    subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
-    subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
-
-    % Loop over repetitions
-    for r = 1:length(repetitions)
-
-        % Loop over gestures
-        for g = 1:length(gestures)
-            % Construct the filename using the correct format
-            emg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
-
-            % Check if the file exists
-            if exist(emg_filename, 'file')
-                % Load EMG data
-                emg_data = load(emg_filename);
-
-                % Access the EMG data from the loaded file
-                dataset = emg_data.data;
-
-                % Perform feature extraction
-                [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_emg, 'emg');
-
-                % Now you can use the extracted features and parameters
-                % For example, you can save the features for each subject, repetition, and task
-                save_filename = fullfile('EMG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
-                save(save_filename, 'features', 'parameters');
-            else
-                fprintf('File %s not found.\n', emg_filename);
-            end
-        end
-    end
-end
-
-
+% 
+% % Loop over subjects
+% for s = 1:length(subjects)
+%     subject_directory = fullfile(data_directory, subjects{s});
+% 
+%     % Extract subject number from directory name using regular
+%     % expression
+%     subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
+%     subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
+% 
+%     % Loop over repetitions
+%     for r = 1:length(repetitions)
+% 
+%         % Loop over gestures
+%         for g = 1:length(gestures)
+%             % Construct the filename using the correct format
+%             emg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
+% 
+%             % Check if the file exists
+%             if exist(emg_filename, 'file')
+%                 % Load EMG data
+%                 emg_data = load(emg_filename);
+% 
+%                 % Access the EMG data from the loaded file
+%                 dataset = emg_data.data;
+% 
+%                 % Perform feature extraction
+%                 [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_emg, 'emg');
+% 
+%                 % Now you can use the extracted features and parameters
+%                 % For example, you can save the features for each subject, repetition, and task
+%                 save_filename = fullfile('EMG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
+%                 save(save_filename, 'features', 'parameters');
+%             else
+%                 fprintf('File %s not found.\n', emg_filename);
+%             end
+%         end
+%     end
+% end
+% 
+% 
 data_directory = 'BMIS_EEG_DATA\data\mat_data'; % Path to the directory containing subject data
 subjects = dir(data_directory); % List of subject directories
 subjects = subjects([subjects.isdir]); % Remove non-directory entries
@@ -56,45 +56,45 @@ subjects = subjects(3:end); % Remove '.' and '..' directories
 gestures = {'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7'}; % List of gesture names
 repetitions = {'R1', 'R2', 'R3', 'R4', 'R5', 'R6'}; % List of repetition names
 sampling_frequency_eeg = 250; % Hz
-
-% Loop over subjects
-for s = 1:length(subjects)
-    subject_directory = fullfile(data_directory, subjects{s});
-
-    % Extract subject number from directory name using regular expression
-    subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
-    subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
-
-    % Loop over repetitions
-    for r = 1:length(repetitions)
-
-        % Loop over gestures
-        for g = 1:length(gestures)
-            % Construct the filename using the correct format
-            eeg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
-
-            % Check if the file exists
-            if exist(eeg_filename, 'file')
-                % Load EEG data
-                eeg_data = load(eeg_filename);
-
-                % Access the EEG data from the loaded file and transpose
-                dataset = permute(eeg_data.data, [2, 1, 3]); % Transpose data matrix
-
-                % Perform feature extraction
-                [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_eeg, 'eeg');
-
-                % Now you can use the extracted features and parameters
-                % For example, you can save the features for each subject, repetition, and task
-                save_filename = fullfile('EEG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
-                save(save_filename, 'features', 'parameters');
-            else
-                fprintf('File %s not found.\n', eeg_filename);
-            end
-        end
-    end
-end
-
+% 
+% % Loop over subjects
+% for s = 1:length(subjects)
+%     subject_directory = fullfile(data_directory, subjects{s});
+% 
+%     % Extract subject number from directory name using regular expression
+%     subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
+%     subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
+% 
+%     % Loop over repetitions
+%     for r = 1:length(repetitions)
+% 
+%         % Loop over gestures
+%         for g = 1:length(gestures)
+%             % Construct the filename using the correct format
+%             eeg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
+% 
+%             % Check if the file exists
+%             if exist(eeg_filename, 'file')
+%                 % Load EEG data
+%                 eeg_data = load(eeg_filename);
+% 
+%                 % Access the EEG data from the loaded file and transpose
+%                 dataset = permute(eeg_data.data, [2, 1, 3]); % Transpose data matrix
+% 
+%                 % Perform feature extraction
+%                 [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_eeg, 'eeg');
+% 
+%                 % Now you can use the extracted features and parameters
+%                 % For example, you can save the features for each subject, repetition, and task
+%                 save_filename = fullfile('EEG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
+%                 save(save_filename, 'features', 'parameters');
+%             else
+%                 fprintf('File %s not found.\n', eeg_filename);
+%             end
+%         end
+%     end
+% end
+% 
 %% EMG signals
 % Load the data
 data = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
