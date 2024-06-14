@@ -1,94 +1,69 @@
 clear all
 
-% Load the EMG data
-data = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
+% Directory containing your EMG data files
+data_dir = 'BMIS_EMG_DATA\data\mat_data\';  % Adjust this path as needed
 
-% Access the first channel
-emg_signals = double(data.data(:, 1));
+% External directory to save filtered data
+filtered_data_dir = 'filtered_EMG_data\';  % Adjust this path as needed
+
+% Create the external directory if it doesn't exist
+if ~exist(filtered_data_dir, 'dir')
+    mkdir(filtered_data_dir);
+end
+
+% List all .mat files in the directory and subdirectories
+file_list = dir(fullfile(data_dir, '**', '*.mat'));
 
 % Sampling frequency
-fs_emg = 1000; % EMG signals typically have a higher sampling rate
+fs_emg = 200; % EMG signals typically have a higher sampling rate
 
-% Time vector
-t = (0:size(emg_signals, 1)-1) / fs_emg;
-
-% Subtract the mean from the signal to remove DC offset
-emg_signals = emg_signals - mean(emg_signals);
-
-%% Plot time domain - Original Signal
-figure;
-subplot(2, 1, 1);
-plot(t, emg_signals(:, 1));
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Original EMG Signal - Time Domain');
-grid on;
-
-%% Preprocessing - Notch Filter at 60 Hz
+% Notch filter parameters
 wo = 60 / (fs_emg / 2);  % Normalize the frequency
-bw = wo / 35;            % Bandwidth of the notch filter
-[b, a] = iirnotch(wo, bw);
+bw = 0.8;            % Bandwidth of the notch filter
+[b_notch, a_notch] = iirnotch(wo, bw);
 
-% Apply the notch filter
-emg_notched = filtfilt(b, a, emg_signals(:, 1));
-
-%% Preprocessing - Band-Pass Filter (20-450 Hz)
+% Band-pass filter parameters
 Fcut1BPF = 20;
-Fcut2BPF = 450;
-[b, a] = butter(4, [Fcut1BPF, Fcut2BPF] / (fs_emg / 2), 'bandpass');
+Fcut2BPF = 90; % Adjust this as per your requirements
+Wn = [Fcut1BPF, Fcut2BPF] / (fs_emg / 2);  % Normalize cutoff frequencies
+[b_bpf, a_bpf] = butter(4, Wn, 'bandpass');
 
-% Apply the band-pass filter
-emg_filtered = filtfilt(b, a, emg_notched);
+% Iterate through each file
+for file_idx = 1:numel(file_list)
+    % Load the data
+    file_name = file_list(file_idx).name;
+    file_path = fullfile(file_list(file_idx).folder, file_name);
+    data = load(file_path);
+    
+    % Get the variable name from the .mat file
+    var_name = fieldnames(data);
+    emg_signals = double(data.(var_name{1}));
+    
+    % Subtract the mean from each channel
+    emg_signals = emg_signals - mean(emg_signals, 1);
 
-% Plot filtered signal in time domain
-subplot(2, 1, 2);
-plot(t, emg_filtered);
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Filtered EMG Signal (Notch + Band-Pass) - Time Domain');
-grid on;
+    % Apply the notch filter to each channel
+    emg_notched = filtfilt(b_notch, a_notch, emg_signals);
 
-%% Frequency domain analysis - Original Signal
-S_orig = fft(emg_signals(:, 1));
-NFFT = length(S_orig);
+    % Apply the band-pass filter to each channel
+    emg_filtered = filtfilt(b_bpf, a_bpf, emg_notched);
 
-% Define frequency resolution and frequency vector
-F = fs_emg / NFFT;
-f = F * (0:NFFT-1);
+    % Determine where to save the filtered signals
+    [~, relative_path] = fileparts(file_path);
+    save_dir = fullfile(filtered_data_dir, relative_path);
+    
+    % Create the directory if it doesn't exist
+    if ~exist(save_dir, 'dir')
+        mkdir(save_dir);
+    end
 
-% Calculate power spectral density (PSD)
-P_orig = abs(S_orig).^2 / NFFT; % Normalize by NFFT to get power per Hz
-
-% Plot the PSD of original signal
-figure;
-subplot(2, 1, 1);
-plot(f, P_orig);
-axis([0 500 0 max(P_orig)])     % Define the visualization range axis([xmin xmax ymin ymax])
-xlabel('Frequency (Hz)');
-ylabel('Power (uV^2/Hz)');
-title('Original EMG Signal - Frequency Domain');
-grid on;
-
-%% Frequency domain analysis - Filtered Signal
-S_filt = fft(emg_filtered);
-NFFT = length(S_filt);
-
-% Calculate power spectral density (PSD)
-P_filt = abs(S_filt).^2 / NFFT; % Normalize by NFFT to get power per Hz
-
-% Plot the PSD of filtered signal
-subplot(2, 1, 2);
-plot(f, P_filt);
-axis([0 500 0 max(P_filt)])     % Define the visualization range axis([xmin xmax ymin ymax])
-xlabel('Frequency (Hz)');
-ylabel('Power (uV^2/Hz)');
-title('Filtered EMG Signal (Notch + Band-Pass) - Frequency Domain');
-grid on;
-
-
-
-
-
+    % Save the filtered signals to a new .mat file
+    save_path = fullfile(save_dir, [file_name(1:end-4) '_filtered.mat']);
+    save(save_path, 'emg_filtered', 'fs_emg');
+    
+    % Print debug information
+    fprintf('Saved filtered signals to: %s\n', save_path);
+end
 
 
 
