@@ -1,92 +1,76 @@
 clear all
 
-% Load the data
-data = load('BMIS_EEG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
+% Directory containing your EEG data files
+data_dir = 'BMIS_EEG_DATA\data\mat_data\';  % Adjust this path as needed
 
-% Access the first channel
-eeg_signals = double(data.data(1, :));
+% External directory to save filtered data
+filtered_data_dir = 'filtered_EEG_data\';  % Adjust this path as needed
+
+% Create the external directory if it doesn't exist
+if ~exist(filtered_data_dir, 'dir')
+    mkdir(filtered_data_dir);
+end
+
+% List all .mat files in the directory and subdirectories
+file_list = dir(fullfile(data_dir, '**', '*.mat'));
 
 % Sampling frequency
 fs_eeg = 250;
 
-% Time vector
-t = (0:length(eeg_signals)-1) / fs_eeg;
-
-% Subtract the mean from the signal
-eeg_signals = eeg_signals - mean(eeg_signals);
-
-%% Plot time domain - Original Signal
-figure;
-subplot(2, 1, 1);
-plot(t, eeg_signals);
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Original EEG Signal - Time Domain');
-grid on;
-
-%% Preprocessing - Notch Filter at 60 Hz
+% Notch filter parameters
 wo = 60 / (fs_eeg / 2);  % Normalize the frequency
-bw = wo / 35;            % Bandwidth of the notch filter
-[b, a] = iirnotch(wo, bw);
+bw = 0.8;            % Bandwidth of the notch filter
+[b_notch, a_notch] = iirnotch(wo, bw);
 
-% Apply the notch filter
-eeg_notched = filtfilt(b, a, eeg_signals);
-
-%% Preprocessing - Low-Pass Filter at 100 Hz 
+% Low-pass filter parameters
 FcutLPF = 100;
-[b, a] = butter(4, FcutLPF / (fs_eeg / 2), 'low');
+[b_lpf, a_lpf] = butter(4, FcutLPF / (fs_eeg / 2), 'low');
 
-% Apply the low-pass filter
-eeg_filtered = filtfilt(b, a, eeg_notched);
+% Iterate through each file
+for file_idx = 1:numel(file_list)
+    % Load the data
+    file_name = file_list(file_idx).name;
+    file_path = fullfile(file_list(file_idx).folder, file_name);
+    data = load(file_path);
+    
+    % Get the variable name from the .mat file
+    var_name = fieldnames(data);
+    eeg_signals = double(data.(var_name{1}));
+    
+    % Permute rows and columns of EEG signals
+    eeg_signals = permute(eeg_signals, [2 1]);  % Swap rows and columns
 
-% Plot filtered signal in time domain
-subplot(2, 1, 2);
-plot(t, eeg_filtered);
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Filtered EEG Signal (Notch + Low-Pass) - Time Domain');
-grid on;
+    % Subtract the mean from each channel
+    eeg_signals = eeg_signals - mean(eeg_signals, 1);
 
-%% Frequency domain analysis - Original Signal
-S_orig = fft(eeg_signals);
-NFFT = length(S_orig);
+    % Apply the notch filter to each channel
+    eeg_notched = zeros(size(eeg_signals));
+    for ch = 1:size(eeg_signals, 2)
+        eeg_notched(:, ch) = filtfilt(b_notch, a_notch, eeg_signals(:, ch));
+    end
 
-% Define frequency resolution and frequency vector
-F = fs_eeg / NFFT;
-f = F * (0:NFFT-1);
+    % Apply the low-pass filter to each channel
+    eeg_filtered = zeros(size(eeg_signals));
+    for ch = 1:size(eeg_signals, 2)
+        eeg_filtered(:, ch) = filtfilt(b_lpf, a_lpf, eeg_notched(:, ch));
+    end
 
-% Calculate power spectral density (PSD)
-P_orig = abs(S_orig).^2 / NFFT; % Normalize by NFFT to get power per Hz
+    % Determine where to save the filtered signals
+    [~, relative_path] = fileparts(file_path);
+    save_dir = fullfile(filtered_data_dir, relative_path);
+    
+    % Create the directory if it doesn't exist
+    if ~exist(save_dir, 'dir')
+        mkdir(save_dir);
+    end
 
-% Plot the PSD of original signal
-figure;
-subplot(2, 1, 1);
-plot(f, P_orig);
-axis([0 100 0 max(P_orig)])     % Define the visualization range axis([xmin xmax ymin ymax])
-xlabel('Frequency (Hz)');
-ylabel('Power (uV^2/Hz)');
-title('Original EEG Signal - Frequency Domain');
-grid on;
-
-%% Frequency domain analysis - Filtered Signal
-S_filt = fft(eeg_filtered);
-NFFT = length(S_filt);
-
-% Calculate power spectral density (PSD)
-P_filt = abs(S_filt).^2 / NFFT; % Normalize by NFFT to get power per Hz
-
-% Plot the PSD of filtered signal
-subplot(2, 1, 2);
-plot(f, P_filt);
-axis([0 100 0 max(P_filt)])     % Define the visualization range axis([xmin xmax ymin ymax])
-xlabel('Frequency (Hz)');
-ylabel('Power (uV^2/Hz)');
-title('Filtered EEG Signal (Notch + Low-Pass) - Frequency Domain');
-grid on;
-
-
-
-
+    % Save the filtered signals to a new .mat file
+    save_path = fullfile(save_dir, [file_name(1:end-4) '_filtered.mat']);
+    save(save_path, 'eeg_filtered', 'fs_eeg');
+    
+    % Print debug information
+    fprintf('Saved filtered signals to: %s\n', save_path);
+end
 
 
 

@@ -1,106 +1,87 @@
-% Define paths and constants
-data_directory = 'BMIS_EMG_DATA\data\mat_data'; % Path to the directory containing subject data
-subjects = dir(data_directory); % List of subject directories
-subjects = subjects([subjects.isdir]); % Remove non-directory entries
-subjects = {subjects.name}; % Extract directory names
-subjects = subjects(3:end); % Remove '.' and '..' directories
-gestures = {'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7'}; % List of gesture names
-repetitions = {'R1', 'R2', 'R3', 'R4', 'R5', 'R6'}; % List of repetition names
-sampling_frequency_emg = 200; % Hz
+clear all
+
+% % Define paths and constants
+% data_directory = 'filtered_EMG_data\'; % Path to the directory containing subject data
+% file_list = dir(fullfile(data_directory, '**', '*_filtered.mat')); % List all filtered .mat files in subdirectories
+% sampling_frequency_emg = 200; % Hz
 % 
-% % Loop over subjects
-% for s = 1:length(subjects)
-%     subject_directory = fullfile(data_directory, subjects{s});
+% % Create directory for saving features
+% features_directory = 'EMG_features';
+% if ~exist(features_directory, 'dir')
+%     mkdir(features_directory);
+% end
 % 
-%     % Extract subject number from directory name using regular
-%     % expression
-%     subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
-%     subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
+% % Iterate through each filtered file
+% for file_idx = 1:numel(file_list)
+%     % Load the filtered EMG data
+%     file_name = file_list(file_idx).name;
+%     file_path = fullfile(file_list(file_idx).folder, file_name);
+%     emg_data = load(file_path);
 % 
-%     % Loop over repetitions
-%     for r = 1:length(repetitions)
+%     % Access the filtered EMG data
+%     emg_filtered = emg_data.emg_filtered;
 % 
-%         % Loop over gestures
-%         for g = 1:length(gestures)
-%             % Construct the filename using the correct format
-%             emg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
+%     % Perform feature extraction
+%     [features, parameters] = universal_feature_extraction(emg_filtered, sampling_frequency_emg, 'emg');
 % 
-%             % Check if the file exists
-%             if exist(emg_filename, 'file')
-%                 % Load EMG data
-%                 emg_data = load(emg_filename);
+%     % Construct save filename
+%     [~, base_name, ~] = fileparts(file_name);
+%     save_filename = fullfile(features_directory, [base_name '_features.mat']);
 % 
-%                 % Access the EMG data from the loaded file
-%                 dataset = emg_data.data;
+%     % Save the extracted features
+%     save(save_filename, 'features', 'parameters');
 % 
-%                 % Perform feature extraction
-%                 [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_emg, 'emg');
-% 
-%                 % Now you can use the extracted features and parameters
-%                 % For example, you can save the features for each subject, repetition, and task
-%                 save_filename = fullfile('EMG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
-%                 save(save_filename, 'features', 'parameters');
-%             else
-%                 fprintf('File %s not found.\n', emg_filename);
-%             end
-%         end
-%     end
+%     % Print debug information
+%     fprintf('Extracted features and saved to: %s\n', save_filename);
 % end
 % 
 % 
-data_directory = 'BMIS_EEG_DATA\data\mat_data'; % Path to the directory containing subject data
-subjects = dir(data_directory); % List of subject directories
-subjects = subjects([subjects.isdir]); % Remove non-directory entries
-subjects = {subjects.name}; % Extract directory names
-subjects = subjects(3:end); % Remove '.' and '..' directories
-gestures = {'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7'}; % List of gesture names
-repetitions = {'R1', 'R2', 'R3', 'R4', 'R5', 'R6'}; % List of repetition names
-sampling_frequency_eeg = 250; % Hz
+% % Define paths and constants
+% data_directory = 'filtered_EEG_data\'; % Path to the directory containing subject data
+% file_list = dir(fullfile(data_directory, '**', '*_filtered.mat')); % List all filtered .mat files in subdirectories
+% sampling_frequency_eeg = 250; % Hz
 % 
-% % Loop over subjects
-% for s = 1:length(subjects)
-%     subject_directory = fullfile(data_directory, subjects{s});
-% 
-%     % Extract subject number from directory name using regular expression
-%     subject_num_match = regexp(subjects{s}, '\d+', 'match'); % Extract numeric part from the directory name
-%     subject_num = str2double(subject_num_match{1}); % Convert the extracted numeric part to a number
-% 
-%     % Loop over repetitions
-%     for r = 1:length(repetitions)
-% 
-%         % Loop over gestures
-%         for g = 1:length(gestures)
-%             % Construct the filename using the correct format
-%             eeg_filename = fullfile(subject_directory, sprintf('S%d_%s_%s.mat', subject_num, repetitions{r}, gestures{g}));
-% 
-%             % Check if the file exists
-%             if exist(eeg_filename, 'file')
-%                 % Load EEG data
-%                 eeg_data = load(eeg_filename);
-% 
-%                 % Access the EEG data from the loaded file and transpose
-%                 dataset = permute(eeg_data.data, [2, 1, 3]); % Transpose data matrix
-% 
-%                 % Perform feature extraction
-%                 [features, parameters] = universal_feature_extraction(dataset, sampling_frequency_eeg, 'eeg');
-% 
-%                 % Now you can use the extracted features and parameters
-%                 % For example, you can save the features for each subject, repetition, and task
-%                 save_filename = fullfile('EEG_features', sprintf('S%d_%s_%s_features.mat', subject_num, repetitions{r}, gestures{g}));
-%                 save(save_filename, 'features', 'parameters');
-%             else
-%                 fprintf('File %s not found.\n', eeg_filename);
-%             end
-%         end
-%     end
+% % Create directory for saving features
+% features_directory = 'EEG_features';
+% if ~exist(features_directory, 'dir')
+%     mkdir(features_directory);
 % end
 % 
-%% EMG signals
+% % Iterate through each filtered file
+% for file_idx = 1:numel(file_list)
+%     % Load the filtered EEG data
+%     file_name = file_list(file_idx).name;
+%     file_path = fullfile(file_list(file_idx).folder, file_name);
+%     eeg_data = load(file_path);
+% 
+%     % Access the filtered EEG data
+%     eeg_filtered = eeg_data.eeg_filtered;
+% 
+%     % Perform feature extraction
+%     [features, parameters] = universal_feature_extraction(eeg_filtered, sampling_frequency_eeg, 'eeg');
+% 
+%     % Construct save filename
+%     [~, base_name, ~] = fileparts(file_name);
+%     save_filename = fullfile(features_directory, [base_name '_features.mat']);
+% 
+%     % Save the extracted features
+%     save(save_filename, 'features', 'parameters');
+% 
+%     % Print debug information
+%     fprintf('Extracted features and saved to: %s\n', save_filename);
+% end
+% % 
+
+
+
+
+
+%% Plot EMG signals
 % Load the data
-data = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
+data = load('filtered_EMG_data\S1_R1_G1\S1_R1_G1_filtered.mat');
 
 % Access the EMG signals
-emg_signals = data.data;
+emg_signals = data.emg_filtered;
 
 % Sampling frequency
 fs_emg = 200;
@@ -119,13 +100,14 @@ for i = 1:min(size(emg_signals, 2), 8) % Plot up to the first 4 channels
     grid on;
 end
 
-%% EEG Signals
+
+%% Plot EEG Signals
 
 % Load the data
-data = load('BMIS_EEG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
+data = load('filtered_EEG_data\S1_R1_G1\S1_R1_G1_filtered.mat');
 
 % Access the EEG signals
-eeg_signals = permute(data.data, [2, 1, 3]);
+eeg_signals = data.eeg_filtered;
 
 % Sampling frequency
 fs_eeg = 250;
@@ -144,28 +126,7 @@ for i = 1:min(size(eeg_signals, 2), 8) % Plot up to the first 4 channels
     grid on;
 end
 
-num_features = size(features, 1);
 
-disp(['Number of features: ', num2str(num_features)]);
-
-% Choose a specific feature index (e.g., 1 for MIN)
-feature_index = 2;
-
-% Extract the feature values for the chosen feature index
-feature_values = squeeze(features(feature_index, :, :)); % NCH x NTRIALS
-
-% Calculate statistics
-mean_feature = mean(feature_values, 2); % Mean across trials for each channel
-median_feature = median(feature_values, 2); % Median across trials for each channel
-std_feature = std(feature_values, 0, 2); % Standard deviation across trials for each 6channel
-range_feature = range(feature_values, 2); % Range across trials for each channel
-
-% Display the statistics
-disp('Statistics for the chosen feature:')
-disp(['Mean: ', num2str(mean_feature')])
-disp(['Median: ', num2str(median_feature')])
-disp(['Standard Deviation: ', num2str(std_feature')])
-disp(['Range: ', num2str(range_feature')])
 
 %% Preprocessing
 
