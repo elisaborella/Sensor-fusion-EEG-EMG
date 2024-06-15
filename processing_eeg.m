@@ -41,7 +41,7 @@ for file_idx = 1:numel(file_list)
     eeg_signals = permute(eeg_signals, [2 1]);  % Swap rows and columns
 
     % Subtract the mean from each channel
-    eeg_signals = eeg_signals - mean(eeg_signals, 1);
+    %eeg_signals = eeg_signals - mean(eeg_signals, 1);
 
     % Apply the notch filter to each channel
     eeg_notched = zeros(size(eeg_signals));
@@ -75,31 +75,3 @@ end
 
 
 
-% %% CMC
-% DUR = 4; % Duration of segment (s)
-% [S_x, S_y, S_xy, Fs] = compute_power_spectrum(double(eeg_filtered), double(emg_signals), DUR, fs_eeg, fs_emg);
-% 
-% 
-% % Plotting
-% figure;
-% 
-% % Plot dello spettro di potenza EEG (S_x)
-% subplot(3, 1, 1);
-% plot((0:size(S_x,1)-1)*(fs_eeg/DUR), S_x(:,1,1)); % Assumiamo il primo segmento e il primo canale
-% title('Spettro di Potenza EEG (S_x)');
-% xlabel('Frequenza (Hz)');
-% ylabel('Potenza');
-% 
-% % Plot dello spettro di potenza EMG (S_y)
-% subplot(3, 1, 2);
-% plot((0:size(S_y,1)-1)*(fs_emg/DUR), S_y(:,1,1)); % Assumiamo il primo segmento e il primo canale
-% title('Spettro di Potenza EMG (S_y)');
-% xlabel('Frequenza (Hz)');
-% ylabel('Potenza');
-% 
-% % Plot dello spettro di potenza incrociato (S_xy)
-% subplot(3, 1, 3);
-% plot((0:size(S_xy,1)-1)*(Fs/DUR), S_xy(:,1,1)); % Assumiamo il primo segmento e il primo canale
-% title('Spettro di Potenza Incrociato (S_xy)');
-% xlabel('Frequenza (Hz)');
-% ylabel('Potenza');

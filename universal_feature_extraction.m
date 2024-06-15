@@ -60,17 +60,16 @@ parameters.featnames.freq = {'MNF', 'MDF', 'SPC', 'BPd', 'BPt', 'BPa', 'BPb', 'B
 features = [];
 features_time = [];
 features_freq = [];
-[NSAMPLES, NCH, NTRIALS] = size(dataset);
+[NSAMPLES, NCH] = size(dataset);
 
 
 %% Feature extraction
-for nt = 1:NTRIALS
-    fprintf('Trial no.%d..\n', nt)
+
     for ch=1:NCH
         fprintf('Channel no.%d..\n', ch)
         
         % Get the current signal's segment
-        x = squeeze( dataset(:,ch,nt) );
+        x = squeeze( dataset(:,ch) );
         
                 
         % Extract all time-domain features
@@ -86,11 +85,10 @@ for nt = 1:NTRIALS
         
         % Fusion: merge features into one feature vector
         if strcmp(dataset_name,'emg')
-            features(:,ch,nt) = [features_time, features_freq(1:end-5)];
+            features(:,ch) = [features_time, features_freq(1:end-5)];
             parameters.featnames.freq = {'MNF', 'MDF', 'SPC'};
         else
-            features(:,ch,nt) = [features_time, features_freq];
+            features(:,ch) = [features_time, features_freq];
         end
         
     end
-end
