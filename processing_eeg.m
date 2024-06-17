@@ -19,12 +19,20 @@ fs_eeg = 250;
 
 % Notch filter parameters
 wo = 60 / (fs_eeg / 2);  % Normalize the frequency
-bw = 0.8;            % Bandwidth of the notch filter
+bw = 0.2;            % Bandwidth of the notch filter
 [b_notch, a_notch] = iirnotch(wo, bw);
 
-% Low-pass filter parameters
-FcutLPF = 100;
-[b_lpf, a_lpf] = butter(4, FcutLPF / (fs_eeg / 2), 'low');
+% Band-pass filter parameters
+Fcut1BPF = 5;
+Fcut2BPF = 50; % Adjust this as per your requirements
+Wn = [Fcut1BPF, Fcut2BPF] / (fs_eeg / 2);  % Normalize cutoff frequencies
+[b_bpf, a_bpf] = butter(5, Wn, 'bandpass');
+
+% Segmentation parameters
+window_length_ms = 550;
+overlap_percentage = 10;
+window_length_samples = round(window_length_ms / 1000 * fs_eeg);
+stride_samples = round(window_length_samples * (1 - overlap_percentage / 100));
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
@@ -36,26 +44,38 @@ for file_idx = 1:numel(file_list)
     % Get the variable name from the .mat file
     var_name = fieldnames(data);
     eeg_signals = double(data.(var_name{1}));
+    eeg_signals = permute(eeg_signals, [2 1]);
+
+     % Remove or replace non-finite values
+    eeg_signals(~isfinite(eeg_signals)) = 0; % Replace NaNs and Infs with 0
     
-    % Permute rows and columns of EEG signals
-    eeg_signals = permute(eeg_signals, [2 1]);  % Swap rows and columns
+    % Normalize the signals to have mean 0 and standard deviation 1
+    eeg_signals = (eeg_signals - mean(eeg_signals, 1)) ./ std(eeg_signals, 0, 1);
+
 
     % Subtract the mean from each channel
     %eeg_signals = eeg_signals - mean(eeg_signals, 1);
 
     % Apply the notch filter to each channel
-    eeg_notched = zeros(size(eeg_signals));
-    for ch = 1:size(eeg_signals, 2)
-        eeg_notched(:, ch) = filtfilt(b_notch, a_notch, eeg_signals(:, ch));
+    eeg_notched = filtfilt(b_notch, a_notch, eeg_signals);
+
+    % Apply the band-pass filter to each channel
+    eeg_filtered = filtfilt(b_bpf, a_bpf, eeg_notched);
+
+    % Segment the filtered signals
+    num_samples = size(eeg_filtered, 1);
+    num_channels = size(eeg_filtered, 2);
+    segments = {};
+    
+    start_idx = 1;
+    while start_idx + window_length_samples - 1 <= num_samples
+        end_idx = start_idx + window_length_samples - 1;
+        segment = eeg_filtered(start_idx:end_idx, :);
+        segments{end + 1} = segment;
+        start_idx = start_idx + stride_samples;
     end
 
-    % Apply the low-pass filter to each channel
-    eeg_filtered = zeros(size(eeg_signals));
-    for ch = 1:size(eeg_signals, 2)
-        eeg_filtered(:, ch) = filtfilt(b_lpf, a_lpf, eeg_notched(:, ch));
-    end
-
-    % Determine where to save the filtered signals
+    % Determine where to save the segmented signals
     [~, relative_path] = fileparts(file_path);
     save_dir = fullfile(filtered_data_dir, relative_path);
     
@@ -64,14 +84,16 @@ for file_idx = 1:numel(file_list)
         mkdir(save_dir);
     end
 
-    % Save the filtered signals to a new .mat file
-    save_path = fullfile(save_dir, [file_name(1:end-4) '_filtered.mat']);
-    save(save_path, 'eeg_filtered', 'fs_eeg');
-    
-    % Print debug information
-    fprintf('Saved filtered signals to: %s\n', save_path);
+    % Save each segment to a new .mat file
+    for seg_idx = 1:numel(segments)
+        save_path = fullfile(save_dir, [file_name(1:end-4) '_filtered_segment_' num2str(seg_idx) '.mat']);
+        eeg_segment = segments{seg_idx};
+        save(save_path, 'eeg_segment', 'fs_eeg');
+        
+        % Print debug information
+        fprintf('Saved filtered segment %d to: %s\n', seg_idx, save_path);
+    end
 end
-
 
 
 
