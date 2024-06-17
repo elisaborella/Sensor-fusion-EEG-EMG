@@ -15,7 +15,7 @@ eeg_features_directory = 'EEG_features'
 
 def extract_label_from_filename(filename):
     # Extract class label from filename, assuming format 'S1_R1_G1_filtered_features.mat'
-    label_str = filename.split('_')[2]  # Assuming label is the third part after splitting by '_'
+    label_str = filename.split('_')[2]
     label = int(label_str[1:])  # Remove 'G' and convert to integer
     return label
 
@@ -28,7 +28,7 @@ def load_features(directory):
         if file_name.endswith('.mat'):
             file_path = os.path.join(directory, file_name)
             data = scipy.io.loadmat(file_path)
-            features = data['features']  # Assuming the feature matrix is named 'features' in the .mat files
+            features = data['features']
             features = features.T  # Transpose to have features as rows and channels as columns
             X.append(features)
             
