@@ -1,37 +1,36 @@
 clear all
 
-%% TEST
+% %% TEST
 emg_data = load("unsegmented_filtered_EMG_data\S23_R1_G1\S23_R1_G1.mat");
-eeg_data = load("unsegmented_filtered_EEG_data\S23_R1_G1\S23_R1_G1.mat");
+eeg_data = load("unsegmented_filtered_EEG_data\S1_R5_G1\S1_R5_G1.mat");
 
 emg_signal = emg_data.emg_filtered;
 fs_emg = emg_data.fs_emg;
-
 eeg_signal = eeg_data.eeg_filtered;
 fs_eeg = eeg_data.fs_eeg;
 
 plotter(emg_signal, fs_emg, "EMG signal");
 plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
-% dur = 2;
-% [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
-% plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
-% 
-% ch = 1;
-% 
-% S_x_avg = mean(S_x(:, ch, :), 3);
-% S_y_avg = mean(S_y(:, ch, :), 3);
-% S_xy_avg = mean(S_xy(:, ch, :), 3);
-% 
-% % Calcolare la CMC
-% CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
-% 
-% figure;
-% plot(CMC);
-% xlabel('Frequency (Hz)');
-% ylabel('CMC');
-% title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', ch));
-% grid on;
+dur = 2;
+[S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
+plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
+
+ch = 1;
+
+S_x_avg = mean(S_x(:, ch, :), 3);
+S_y_avg = mean(S_y(:, ch, :), 3);
+S_xy_avg = mean(S_xy(:, ch, :), 3);
+
+% Calcolare la CMC
+CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
+
+figure;
+plot(CMC);
+xlabel('Frequency (Hz)');
+ylabel('CMC');
+title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', ch));
+grid on;
 
 %% EMG FEATURES EXTRACTION
 % Define paths and constants

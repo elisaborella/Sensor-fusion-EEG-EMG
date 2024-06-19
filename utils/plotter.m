@@ -1,8 +1,9 @@
 function plotter(signal, fs, plot_title)
 %PLOTTER Summary of this function goes here
 %   Detailed explanation goes here
+t = (0:size(signal,1)-1) / fs;  % Calculate time vector in seconds
 figure;
-plot(signal(:,1));
+plot(t, signal(:,1));
 xlabel('Time (s)');
 ylabel('Amplitude');
 title(sprintf('%s - Time domain', plot_title));

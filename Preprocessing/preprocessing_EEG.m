@@ -28,6 +28,14 @@ Fcut2BPF = 50; % Adjust this as per your requirements
 Wn = [Fcut1BPF, Fcut2BPF] / (fs_eeg / 2);  % Normalize cutoff frequencies
 [b_bpf, a_bpf] = butter(5, Wn, 'bandpass');
 
+% Low-pass filter parameters (to remove frequencies above 60 Hz)
+Fcut_lp = 60;  % Cutoff frequency for low-pass filter
+Wn_lp = Fcut_lp / (fs_eeg / 2);  % Normalize cutoff frequency for low-pass
+[b_lp, a_lp] = butter(5, Wn_lp, 'low');
+
+% Padding parameters (50 samples at the beginning and end to remove)
+padding_samples = 50;
+
 % Segmentation parameters
 window_length_ms = 550;
 overlap_percentage = 60;
@@ -46,7 +54,7 @@ for file_idx = 1:numel(file_list)
     eeg_signals = double(data.(var_name{1}));
     eeg_signals = permute(eeg_signals, [2 1]);
 
-     % Remove or replace non-finite values
+    % Remove or replace non-finite values
     eeg_signals(~isfinite(eeg_signals)) = 0; % Replace NaNs and Infs with 0
     
     % Normalize the signals to have mean 0 and standard deviation 1
@@ -56,7 +64,13 @@ for file_idx = 1:numel(file_list)
     eeg_notched = filtfilt(b_notch, a_notch, eeg_signals);
 
     % Apply the band-pass filter to each channel
-    eeg_filtered = filtfilt(b_bpf, a_bpf, eeg_notched);
+    eeg_filtered_bp = filtfilt(b_bpf, a_bpf, eeg_notched);
+
+    % Apply the low-pass filter to each channel
+    eeg_filtered_lp = filtfilt(b_lp, a_lp, eeg_filtered_bp);
+
+    % Remove padding from the beginning and end
+    eeg_filtered = eeg_filtered_lp(padding_samples+1:end-padding_samples, :);
     
     % Determine where to save the segmented signals
     [~, relative_path] = fileparts(file_path);
