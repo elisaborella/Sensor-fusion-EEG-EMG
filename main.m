@@ -10,24 +10,59 @@ fs_emg = emg_data.fs_emg;
 eeg_signal = eeg_data.eeg_filtered;
 fs_eeg = eeg_data.fs_eeg;
 
-plotter(emg_signal, fs_emg, "EMG signal");
-plotter(eeg_signal, fs_eeg, "EEG signal");
+[emg_segments, time, stride_samples, window_length_samples] = segmentation(emg_signal(:,1), fs_emg, 550, 0);
 
-dur = 4;
+% Applicazione della media mobile a ciascun segmento
+window_size = 50; % Dimensione della finestra per la media mobile
+emg_segments_smoothed = cellfun(@(seg) moving_average(seg, window_size), emg_segments, 'UniformOutput', false);
+
+% Plot di tutti i segmenti smussati
+figure;
+hold on; % Mantiene tutti i segmenti nello stesso grafico
+
+for i = 1:length(emg_segments_smoothed)
+    plot(time, emg_segments_smoothed{i});
+end
+
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Segmentation of EMG Signal with Moving Average');
+grid on;
+legend(arrayfun(@(x) sprintf('Segment %d', x), 1:length(emg_segments_smoothed), 'UniformOutput', false));
+hold off; % Disattiva il mantenimento
+
+%%
+% Ricostruzione del segnale intero
+emg_signal_reconstructed = zeros(size(emg_signal,1)); % Preallocazione
+
+for i = 1:length(emg_segments_smoothed)
+    segment_start_idx = (i - 1) * stride_samples + 1;
+    segment_end_idx = segment_start_idx + window_length_samples - 1;
+    emg_signal_reconstructed(segment_start_idx:segment_end_idx) = emg_segments_smoothed{i};
+end
+
+% Plot del segnale intero ricostruito
+figure;
+plot(emg_signal_reconstructed);
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Reconstructed EMG Signal after Segmentation and Cleaning');
+grid on;
+
+%%
+
+plotter(emg_signal, fs_emg, "EMG signal");
+% plotter(eeg_signal, fs_eeg, "EEG signal");
+
+dur = 2;
 [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
 plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
 
-%% CMC
 ch = 1;
 
 S_x_avg = mean(S_x(:, ch, :), 3);
 S_y_avg = mean(S_y(:, ch, :), 3);
 S_xy_avg = mean(S_xy(:, ch, :), 3);
-
-% Controllo dei valori per evitare log di numeri piccoli o negativi
-S_x_avg(S_x_avg < eps) = eps;
-S_y_avg(S_y_avg < eps) = eps;
-S_xy_avg(S_xy_avg < eps) = eps;
 
 % Calcolare la CMC
 CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
@@ -37,7 +72,6 @@ plot(CMC);
 xlabel('Frequency (Hz)');
 ylabel('CMC');
 title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', ch));
-ylim([0 1]);
 grid on;
 
 %% EMG FEATURES EXTRACTION
@@ -288,4 +322,9 @@ for i = 1:num_channels_to_plot
     ylabel('Magnitude');
     title(['Filtered EEG Signal Channel ', num2str(i)]);
     grid on;
+end
+
+function smoothed_signal = moving_average(signal, window_size)
+    % MOVING_AVERAGE Applica una media mobile al segnale
+    smoothed_signal = filter(ones(1, window_size)/window_size, 1, signal);
 end
