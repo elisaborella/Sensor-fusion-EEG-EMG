@@ -1,17 +1,17 @@
 clear all
 
-% %% TEST
-% emg_data = load("unsegmented_filtered_EMG_data\S23_R1_G1\S23_R1_G1.mat");
-% eeg_data = load("unsegmented_filtered_EEG_data\S23_R1_G1\S23_R1_G1.mat");
-% 
-% emg_signal = emg_data.emg_filtered;
-% fs_emg = emg_data.fs_emg;
-% 
-% eeg_signal = eeg_data.eeg_filtered;
-% fs_eeg = eeg_data.fs_eeg;
-% 
-% plotter(emg_signal, fs_emg, "EMG signal");
-% plotter(eeg_signal, fs_eeg, "EEG signal");
+%% TEST
+emg_data = load("unsegmented_filtered_EMG_data\S23_R1_G1\S23_R1_G1.mat");
+eeg_data = load("unsegmented_filtered_EEG_data\S23_R1_G1\S23_R1_G1.mat");
+
+emg_signal = emg_data.emg_filtered;
+fs_emg = emg_data.fs_emg;
+
+eeg_signal = eeg_data.eeg_filtered;
+fs_eeg = eeg_data.fs_eeg;
+
+plotter(emg_signal, fs_emg, "EMG signal");
+plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
 % dur = 2;
 % [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
