@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import scipy.io as sio
+import scipy.io
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -10,48 +10,39 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import Counter
 
+cmc_features_directory = '../CMC_features'
+
 # Function to extract label from filename
 def extract_label_from_filename(filename):
-    # Extract class label from filename, assuming format 'S1_R1_G1_filtered.mat'
-    parts = filename.split('_')
-    label_str = parts[-2].split('.')[0]  # Extracting label G*
-    if label_str[0] != 'G':
-        raise ValueError('Invalid filename format. Expected G* for label.')
-    
+    # Extract class label from filename, assuming format 'S1_R1_G1_filtered_features.mat'
+    label_str = filename.split('_')[2]  # Assuming label is the third part after splitting by '_'
     label = int(label_str[1:])  # Remove 'G' and convert to integer
     return label
 
 # Function to load features and labels
-def load_features(cmc_results_file):
-    # Load CMC results file to get labels
-
-    temp = sio.loadmat(cmc_results_file)
+def load_features(directory):
     X = []
-    print(len(temp['CMC_results'][0]))
-    for i in range (0,len(temp['CMC_results'][0])):
-        X.append(temp['CMC_results'][0][i][1][0][0])
-
-
-    
     y = []
-    
-    for i in range(len(X)):
-        
-        # Extract label from filename
-        eeg_filename = temp['CMC_results'][0][i][0][0]  # Accessing the first element from the list
-        filename = os.path.basename(eeg_filename)
-        label = extract_label_from_filename(filename)
-        
-        y.append(label)
+    filenames = []
 
-    
-    return np.array(X), np.array(y)
+    for file_name in os.listdir(directory):
+        if file_name.endswith('.mat'):
+            file_path = os.path.join(directory, file_name)
+            data = scipy.io.loadmat(file_path)
+            features = data['features']
+            features = features.T  # Transpose to have features as rows and channels as columns
+            X.append(features)
 
-# File path for CMC results
-output_file = '../CMC_time_features.mat'
+            # Extract label from filename
+            label = extract_label_from_filename(file_name)
+            y.append(label)
+            filenames.append(file_name)
+
+    return np.array(X), np.array(y), filenames
+
 
 # Load features and labels from CMC results file
-X, y = load_features(output_file)
+X, y, filenames = load_features(cmc_features_directory)
 
 # Check if there's enough data for splitting
 if len(X) < 2:

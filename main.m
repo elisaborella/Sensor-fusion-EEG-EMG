@@ -197,7 +197,7 @@ for file_idx = 1:numel(emg_file_list)
     
     % Construct save filename
     [~, base_name, ~] = fileparts(eeg_file_name);
-    save_filename = fullfile(cmc_features_directory, [base_name '_CMC_features.mat']);
+    save_filename = fullfile(cmc_features_directory, [base_name '_features.mat']);
 
     % Save the CMC features
     save(save_filename, 'features', 'parameters');
