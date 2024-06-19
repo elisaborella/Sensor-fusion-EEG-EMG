@@ -1,8 +1,8 @@
 clear all
 
 %% TEST
-emg_data = load("unsegmented_filtered_EMG_data\S7_R1_G1\S7_R1_G1.mat");
-eeg_data = load("unsegmented_filtered_EEG_data\S7_R1_G1\S7_R1_G1.mat");
+emg_data = load("unsegmented_filtered_EMG_data\S23_R1_G1\S23_R1_G1.mat");
+eeg_data = load("unsegmented_filtered_EEG_data\S23_R1_G1\S23_R1_G1.mat");
 
 emg_signal = emg_data.emg_filtered;
 fs_emg = emg_data.fs_emg;
@@ -10,50 +10,9 @@ fs_emg = emg_data.fs_emg;
 eeg_signal = eeg_data.eeg_filtered;
 fs_eeg = eeg_data.fs_eeg;
 
-[emg_segments, time, stride_samples, window_length_samples] = segmentation(emg_signal(:,1), fs_emg, 550, 0);
-
-% Applicazione della media mobile a ciascun segmento
-window_size = 50; % Dimensione della finestra per la media mobile
-emg_segments_smoothed = cellfun(@(seg) moving_average(seg, window_size), emg_segments, 'UniformOutput', false);
-
-% Plot di tutti i segmenti smussati
-figure;
-hold on; % Mantiene tutti i segmenti nello stesso grafico
-
-for i = 1:length(emg_segments_smoothed)
-    plot(time, emg_segments_smoothed{i});
-end
-
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Segmentation of EMG Signal with Moving Average');
-grid on;
-legend(arrayfun(@(x) sprintf('Segment %d', x), 1:length(emg_segments_smoothed), 'UniformOutput', false));
-hold off; % Disattiva il mantenimento
-
-%%
-% Ricostruzione del segnale intero
-emg_signal_reconstructed = zeros(size(emg_signal,1)); % Preallocazione
-
-for i = 1:length(emg_segments_smoothed)
-    segment_start_idx = (i - 1) * stride_samples + 1;
-    segment_end_idx = segment_start_idx + window_length_samples - 1;
-    emg_signal_reconstructed(segment_start_idx:segment_end_idx) = emg_segments_smoothed{i};
-end
-
-% Plot del segnale intero ricostruito
-figure;
-plot(emg_signal_reconstructed);
-xlabel('Time (s)');
-ylabel('Amplitude');
-title('Reconstructed EMG Signal after Segmentation and Cleaning');
-grid on;
-
-%%
-
 plotter(emg_signal, fs_emg, "EMG signal");
-% plotter(eeg_signal, fs_eeg, "EEG signal");
-
+plotter(eeg_signal, fs_eeg, "EEG signal");
+%%
 dur = 2;
 [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
 plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
