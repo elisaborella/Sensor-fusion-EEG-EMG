@@ -54,31 +54,39 @@ for file_idx = 1:numel(file_list)
         
         emg_signals(:, channel_idx) = channel_data;
     end
+
     %% SEGMENTATION
-    [emg_segments, time, stride_samples, window_length_samples] = segmentation(emg_signals, fs_emg, 550, 0);
+    %[emg_segments, time, stride_samples, window_length_samples] = segmentation(emg_signals, fs_emg, 550, 0);
 
     % Moving Average in order to smooth the signal
-    window_size = 100;
-    emg_segments_smoothed = cellfun(@(seg) moving_average(seg, window_size), emg_segments, 'UniformOutput', false);
+    % 
+    % emg_segments_smoothed = cellfun(@(seg) moving_average(seg, window_size), emg_segments, 'UniformOutput', false);
     
     %% RECONSTRUCTION
-    emg_signal_reconstructed = zeros(size(emg_signals,1), size(emg_signals,2)); % Preallocation
-    emg_cell = zeros(size(emg_signals,1),1);
-    for i = 1:length(emg_segments_smoothed)
-        % Prendi il segmento filtrato corrente dalla cella
-        emg_segment_smoothed = emg_segments_smoothed{i};
-
-        for j = 1:length(emg_segment_smoothed)
-            segment_start_idx = (j - 1) * stride_samples + 1;
-            segment_end_idx = segment_start_idx + window_length_samples - 1;
-            % Assegna il segmento filtrato alla posizione corretta in emg_cell
-            emg_cell(segment_start_idx:segment_end_idx) = emg_segment_smoothed{j};
-        end
-        emg_signal_reconstructed(:, i) = abs(emg_cell-mean(emg_cell));
+%     emg_signal_reconstructed = zeros(size(emg_signals,1), size(emg_signals,2)); % Preallocation
+%     emg_cell = zeros(size(emg_signals,1),1);
+%     for i = 1:length(emg_segments_smoothed)
+%         % Prendi il segmento filtrato corrente dalla cella
+%         emg_segment_smoothed = emg_segments_smoothed{i};
+%         temp = emg_segments{i};
+%         for j = 1:length(emg_segment_smoothed)
+%             figure;
+%             plot(temp{j})
+%             segment_start_idx = (j - 1) * stride_samples + 1;
+%             segment_end_idx = segment_start_idx + window_length_samples - 1;
+%             % Assegna il segmento filtrato alla posizione corretta in emg_cell
+%             emg_cell(segment_start_idx:segment_end_idx) = emg_segment_smoothed{j};
+%         end
+%         emg_signal_reconstructed(:, i) = abs(emg_cell-mean(emg_cell));
+%     end
+    
+    window_size = 100;
+    emg_signals_smoothed = zeros(size(emg_signals,1), size(emg_signals,2));
+    for i = 1:size(emg_signals,2)
+        emg_signals_smoothed(:,i) = moving_average_array(emg_signals(:,i), window_size);
     end
-
     % Normalize the signals (z-score normalization)
-    emg_signals = (emg_signal_reconstructed - mean(emg_signal_reconstructed, 1)) ./ std(emg_signal_reconstructed, 0, 1);
+    emg_signals = (emg_signals_smoothed - mean(emg_signals_smoothed, 1)) ./ std(emg_signals_smoothed, 0, 1);
 
     % Ensure normalization did not introduce non-finite values
     emg_signals(~isfinite(emg_signals)) = 0;
