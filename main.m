@@ -1,5 +1,44 @@
 clear all
 
+%% TEST
+emg_data = load("unsegmented_filtered_EMG_data\S7_R1_G1\S7_R1_G1.mat");
+eeg_data = load("unsegmented_filtered_EEG_data\S7_R1_G1\S7_R1_G1.mat");
+
+emg_signal = emg_data.emg_filtered;
+fs_emg = emg_data.fs_emg;
+
+eeg_signal = eeg_data.eeg_filtered;
+fs_eeg = eeg_data.fs_eeg;
+
+plotter(emg_signal, fs_emg, "EMG signal");
+plotter(eeg_signal, fs_eeg, "EEG signal");
+
+dur = 4;
+[S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
+plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
+
+%% CMC
+ch = 1;
+
+S_x_avg = mean(S_x(:, ch, :), 3);
+S_y_avg = mean(S_y(:, ch, :), 3);
+S_xy_avg = mean(S_xy(:, ch, :), 3);
+
+% Controllo dei valori per evitare log di numeri piccoli o negativi
+S_x_avg(S_x_avg < eps) = eps;
+S_y_avg(S_y_avg < eps) = eps;
+S_xy_avg(S_xy_avg < eps) = eps;
+
+% Calcolare la CMC
+CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
+
+figure;
+plot(CMC);
+xlabel('Frequency (Hz)');
+ylabel('CMC');
+title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', ch));
+ylim([0 1]);
+grid on;
 
 %% EMG FEATURES EXTRACTION
 % Define paths and constants

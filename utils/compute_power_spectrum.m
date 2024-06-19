@@ -1,4 +1,4 @@
-function [S_x, S_y, S_xy, p_eeg] = compute_power_spectrum(eeg_signals, emg_signals, DUR, Fs_eeg, Fs_emg)
+function [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signals, emg_signals, DUR, Fs_eeg, Fs_emg)
     % COMPUTE_POWER_SPECTRUM Calcola lo spettro di potenza di ogni canale EEG e lo spettro di potenza incrociato
     %   eeg_signals: matrice in cui ogni colonna rappresenta un canale EEG
     %   emg_signals: matrice in cui ogni colonna rappresenta un canale EMG
@@ -23,6 +23,8 @@ function [S_x, S_y, S_xy, p_eeg] = compute_power_spectrum(eeg_signals, emg_signa
     % Ridimensionare EMG per corrispondere a EEG resampled
     [p_emg, q_emg] = rat(Fs_eeg / Fs_emg);
     emg_resampled = resample(emg_signals, p_emg, q_emg);
+
+    fs = max(p_emg,p_eeg);
 
     % Determinare il numero di segmenti per l'analisi della durata specificata
     segment_length = DUR * Fs_eeg; % numero di campioni per segmento
