@@ -1,4 +1,4 @@
-function [S_x, S_y, S_xy, f] = compute_power_spectrum(eeg_signals, emg_signals, Fs_eeg, Fs_emg)
+function [S_x, S_y, S_xy, f, fs_cross] = compute_power_spectrum(eeg_signals, emg_signals, Fs_eeg, Fs_emg)
     % COMPUTE_POWER_SPECTRUM Calcola lo spettro di potenza di ogni canale EEG e lo spettro di potenza incrociato
     %   eeg_signals: matrice in cui ogni colonna rappresenta un canale EEG
     %   emg_signals: matrice in cui ogni colonna rappresenta un canale EMG
@@ -16,6 +16,8 @@ function [S_x, S_y, S_xy, f] = compute_power_spectrum(eeg_signals, emg_signals, 
 
         eeg_resampled = resample(eeg_signals, p_eeg, q_eeg);
         emg_resampled = resample(emg_signals, p_emg, q_emg);
+
+        fs_cross = Fs_emg;
     else
         eeg_resampled = eeg_signals;
         emg_resampled = emg_signals;

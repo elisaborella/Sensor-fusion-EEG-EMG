@@ -1,8 +1,8 @@
 clear all
 
 % %% TEST
-emg_data = load("unsegmented_filtered_EMG_data\S1_R5_G1\S1_R5_G1.mat");
-eeg_data = load("unsegmented_filtered_EEG_data\S1_R5_G1\S1_R5_G1.mat");
+emg_data = load("unsegmented_filtered_EMG_data\S10_R1_G6\S10_R1_G6.mat");
+eeg_data = load("unsegmented_filtered_EEG_data\S10_R1_G6\S10_R1_G6.mat");
 
 emg_signal = emg_data.emg_filtered;
 fs_emg = emg_data.fs_emg;
@@ -12,8 +12,8 @@ fs_eeg = eeg_data.fs_eeg;
 plotter(emg_signal, fs_emg, "EMG signal");
 plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
-% [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
-% plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
+[S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
+plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
 
 CMC = zeros(size(S_xy,1));
 for i = 1 :size(S_xy,2)
@@ -126,7 +126,7 @@ for file_idx = 1:numel(file_list)
     % Print debug information
     fprintf('Extracted features and saved to: %s\n', save_filename);
 end
- 
+
 %% CMC features extraction
 % Define paths and constants
 eeg_data_directory = 'unsegmented_filtered_EEG_data\'; % Path to the directory containing EEG data
@@ -144,7 +144,7 @@ if ~exist(cmc_features_directory, 'dir')
     mkdir(cmc_features_directory);
 end
 
-for file_idx = 1:numel(eeg_file_list)
+for file_idx = 1:numel(emg_file_list)
     % Load the filtered EEG and EMG data
     eeg_file_name = eeg_file_list(file_idx).name;
     emg_file_name = emg_file_list(file_idx).name;
@@ -160,7 +160,7 @@ for file_idx = 1:numel(eeg_file_list)
     emg_filtered = emg_data.emg_filtered;
 
     % Perform CMC calculation
-    [S_x, S_y, S_xy, f] = compute_power_spectrum(eeg_filtered, emg_filtered, sampling_frequency_eeg, sampling_frequency_emg);
+    [S_x, S_y, S_xy, f, fs] = compute_power_spectrum(eeg_filtered, emg_filtered, sampling_frequency_eeg, sampling_frequency_emg);
     
     num_channels = size(eeg_filtered, 2); % Number of channels
 
@@ -178,20 +178,29 @@ for file_idx = 1:numel(eeg_file_list)
 
         % Normalize the CMC to be between 0 and 1
         CMC_normalized = squared_CMC / max(squared_CMC);
+        
+        % Handle NaN in CMC_normalized
+        if any(isnan(CMC_normalized))
+            % Replace NaN with zeros or handle as appropriate
+            CMC_normalized(isnan(CMC_normalized)) = 0;
+        end
 
-        % Store the CMC in the cell array
-        CMC(:,ch) = CMC_normalized;
+        % Calculate the CMC in the time domain
+        CMC_time = ifft(CMC_normalized);
+
+        % Ensure CMC_time is real
+        CMC(:,ch) = real(CMC_time);
     end
 
     % Perform feature extraction
-    %[features, parameters] = universal_feature_extraction(CMC, sampling_frequency_eeg, 'eeg');
+    [features, parameters] = universal_feature_extraction(CMC, fs, 'emg');
     
     % Construct save filename
     [~, base_name, ~] = fileparts(eeg_file_name);
     save_filename = fullfile(cmc_features_directory, [base_name '_CMC_features.mat']);
 
     % Save the CMC features
-    save(save_filename, 'CMC');
+    save(save_filename, 'features', 'parameters');
 
     % Print debug information
     fprintf('Extracted CMC features for all channels and saved to: %s\n', save_filename);

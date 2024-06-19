@@ -48,7 +48,7 @@ def load_features(cmc_results_file):
     return np.array(X), np.array(y)
 
 # File path for CMC results
-output_file = 'CMC_results.mat'
+output_file = '../CMC_time_features.mat'
 
 # Load features and labels from CMC results file
 X, y = load_features(output_file)
