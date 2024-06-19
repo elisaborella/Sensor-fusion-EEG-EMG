@@ -1,7 +1,7 @@
 clear all
 
 % %% TEST
-emg_data = load("unsegmented_filtered_EMG_data\S23_R1_G1\S23_R1_G1.mat");
+emg_data = load("unsegmented_filtered_EMG_data\S1_R5_G1\S1_R5_G1.mat");
 eeg_data = load("unsegmented_filtered_EEG_data\S1_R5_G1\S1_R5_G1.mat");
 
 emg_signal = emg_data.emg_filtered;
@@ -12,25 +12,47 @@ fs_eeg = eeg_data.fs_eeg;
 plotter(emg_signal, fs_emg, "EMG signal");
 plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
-dur = 2;
-[S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, dur, fs_eeg, fs_emg);
-plot_power_spectrum(S_x, S_y, S_xy, fs_eeg, dur);
+% [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
+% plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
 
-ch = 1;
-
-S_x_avg = mean(S_x(:, ch, :), 3);
-S_y_avg = mean(S_y(:, ch, :), 3);
-S_xy_avg = mean(S_xy(:, ch, :), 3);
-
-% Calcolare la CMC
-CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
-
-figure;
-plot(CMC);
-xlabel('Frequency (Hz)');
-ylabel('CMC');
-title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', ch));
-grid on;
+CMC = zeros(size(S_xy,1));
+for i = 1 :size(S_xy,2)
+    S_x_avg = mean(S_x(:, i, :), 3);
+    S_y_avg = mean(S_y(:, i, :), 3);
+    S_xy_avg = mean(S_xy(:, i, :), 3);
+    % Calcolare il CMC
+    squared_CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
+    
+    % Normalizzare il CMC per ottenere valori tra 0 e 1
+    CMC(:,i) = squared_CMC / max(squared_CMC);
+    
+    % Visualizzare il CMC
+    figure;
+    plot(fs, CMC(:,i));
+    xlabel('Frequency (Hz)');
+    ylabel('CMC');
+    title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', i));
+    grid on;
+    hold on;
+    
+    % Definire le sub-bande di frequenza
+    sub_bands = [6 8; 8 12; 13 20; 20 30; 13 30; 30 60; 60 80; 30 80];
+    
+    % Aggiungere le linee verticali rosse per ogni sub-banda
+    for j = 1:size(sub_bands, 1)
+        xline(sub_bands(j, 1), 'r--');
+        xline(sub_bands(j, 2), 'r--');
+    end
+    
+    % Legenda delle sub-bande
+    legend_labels = {'Low-α', 'α', 'Low-β', 'High-β', 'β', 'Low-γ', 'High-γ', 'γ'};
+    for j = 1:size(sub_bands, 1)
+        % Centrare il testo della legenda tra le linee delle sub-bande
+        text(mean(sub_bands(j, :)), max(CMC(:,i))*0.9, legend_labels{j}, 'Color', 'r', 'HorizontalAlignment', 'center');
+    end
+    
+    hold off;
+end
 
 %% EMG FEATURES EXTRACTION
 % Define paths and constants
@@ -105,184 +127,72 @@ for file_idx = 1:numel(file_list)
     fprintf('Extracted features and saved to: %s\n', save_filename);
 end
  
+%% CMC features extraction
+% Define paths and constants
+eeg_data_directory = 'unsegmented_filtered_EEG_data\'; % Path to the directory containing EEG data
+emg_data_directory = 'unsegmented_filtered_EMG_data\'; % Path to the directory containing EMG data
+eeg_file_list = dir(fullfile(eeg_data_directory, '**', '*.mat')); % List all filtered segment .mat files in subdirectories
+emg_file_list = dir(fullfile(emg_data_directory, '**', '*.mat')); % List all filtered segment .mat files in subdirectories
 
+% Assuming EEG and EMG have the same file structure and naming
+sampling_frequency_eeg = 250; % Hz
+sampling_frequency_emg = 200; % Hz
 
+% Create directory for saving features
+cmc_features_directory = 'CMC_features';
+if ~exist(cmc_features_directory, 'dir')
+    mkdir(cmc_features_directory);
+end
 
+for file_idx = 1:numel(eeg_file_list)
+    % Load the filtered EEG and EMG data
+    eeg_file_name = eeg_file_list(file_idx).name;
+    emg_file_name = emg_file_list(file_idx).name;
+    
+    eeg_file_path = fullfile(eeg_file_list(file_idx).folder, eeg_file_name);
+    emg_file_path = fullfile(emg_file_list(file_idx).folder, emg_file_name);
+    
+    eeg_data = load(eeg_file_path);
+    emg_data = load(emg_file_path);
 
+    % Access the filtered EEG and EMG data
+    eeg_filtered = eeg_data.eeg_filtered;
+    emg_filtered = emg_data.emg_filtered;
 
-% %% Plot EMG Signals
-% 
-% % Load the data
-% data_filtered = load('filtered_EMG_data\S1_R1_G1\S1_R1_G1_filtered_segment_1.mat');
-% data_raw = load('BMIS_EMG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
-% 
-% % Access the EMG signals before and after filtering
-% var_name_raw = fieldnames(data_raw);
-% if isempty(var_name_raw)
-%     error('No fields found in data_raw structure.');
-% end
-% emg_signals_raw = double(data_raw.(var_name_raw{1}));  % Assuming rows are channels
-% 
-% var_name_filtered = fieldnames(data_filtered);
-% if isempty(var_name_filtered)
-%     error('No fields found in data_filtered structure.');
-% end
-% emg_signals_filtered = double(data_filtered.(var_name_filtered{1}));  % Assuming rows are channels
-% 
-% % Ensure both signals have the same number of samples
-% min_samples = min(size(emg_signals_raw, 1), size(emg_signals_filtered, 1));
-% disp(min_samples)
-% emg_signals_raw = emg_signals_raw(1:min_samples, :);
-% emg_signals_filtered = emg_signals_filtered(1:min_samples, :);
-% 
-% % Sampling frequency
-% fs_emg = 200;
-% 
-% % Time vector
-% t = (0:min_samples-1) / fs_emg;
-% 
-% % Plot some sample EMG signals in the time domain
-% figure;
-% num_channels_to_plot = min(size(emg_signals_raw, 1), 8);
-% for i = 1:num_channels_to_plot
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 1);
-%     plot(t, emg_signals_raw(:,i));
-%     xlabel('Time (s)');
-%     ylabel('Amplitude');
-%     title(['Raw EMG Signal Channel ', num2str(i)]);
-%     grid on;
-%     
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 2);
-%     plot(t, emg_signals_filtered(:, i));
-%     xlabel('Time (s)');
-%     ylabel('Amplitude');
-%     title(['Filtered EMG Signal Channel ', num2str(i)]);
-%     grid on;
-% end
-% 
-% % Frequency domain analysis
-% n = min_samples;
-% f = (0:n-1)*(fs_emg/n);
-% f = f(1:floor(n/2));
-% 
-% % Plot the frequency domain signals
-% figure;
-% for i = 1:num_channels_to_plot
-%     % Compute FFT for raw signals
-%     fft_raw = fft(emg_signals_raw(:,i));
-%     P2_raw = abs(fft_raw/n);
-%     P1_raw = P2_raw(1:floor(n/2));
-%     P1_raw(2:end-1) = 2*P1_raw(2:end-1);
-% 
-%     % Compute FFT for filtered signals
-%     fft_filtered = fft(emg_signals_filtered( :,i));
-%     P2_filtered = abs(fft_filtered/n);
-%     P1_filtered = P2_filtered(1:floor(n/2));
-%     P1_filtered(2:end-1) = 2*P1_filtered(2:end-1);
-% 
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 1);
-%     plot(f, P1_raw);
-%     xlabel('Frequency (Hz)');
-%     ylabel('Magnitude');
-%     title(['Raw EMG Signal Channel ', num2str(i)]);
-%     grid on;
-% 
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 2);
-%     plot(f, P1_filtered);
-%     xlabel('Frequency (Hz)');
-%     ylabel('Magnitude');
-%     title(['Filtered EMG Signal Channel ', num2str(i)]);
-%     grid on;
-% end
-% 
-% 
-% 
-% %% Plot EEG Signals
-% 
-% % Load the data
-% data_filtered = load('filtered_EEG_data\S1_R1_G1\S1_R1_G1_filtered_segment_1.mat');
-% data_raw = load('BMIS_EEG_DATA\data\mat_data\subject_1\S1_R1_G1.mat');
-% 
-% % Access the EEG signals before and after filtering
-% var_name_raw = fieldnames(data_raw);
-% if isempty(var_name_raw)
-%     error('No fields found in data_raw structure.');
-% end
-% eeg_signals_raw = double(data_raw.(var_name_raw{1}));  % Assuming rows are channels
-% 
-% var_name_filtered = fieldnames(data_filtered);
-% if isempty(var_name_filtered)
-%     error('No fields found in data_filtered structure.');
-% end
-% eeg_signals_filtered = double(data_filtered.(var_name_filtered{1}));  % Assuming rows are channels
-% 
-% % Ensure both signals have the same number of samples
-% min_samples = min(size(eeg_signals_raw, 1), size(eeg_signals_filtered, 1));
-% disp(min_samples)
-% eeg_signals_raw = eeg_signals_raw(1:min_samples, :);
-% eeg_signals_filtered = eeg_signals_filtered(1:min_samples, :);
-% 
-% % Sampling frequency
-% fs_eeg = 250;
-% 
-% % Time vector
-% t = (0:min_samples-1) / fs_eeg;
-% 
-% % Plot some sample EEG signals in the time domain
-% figure;
-% num_channels_to_plot = min(size(eeg_signals_raw, 1), 8);
-% for i = 1:num_channels_to_plot
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 1);
-%     plot(t, eeg_signals_raw(:,i));
-%     xlabel('Time (s)');
-%     ylabel('Amplitude');
-%     title(['Raw EEG Signal Channel ', num2str(i)]);
-%     grid on;
-%     
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 2);
-%     plot(t, eeg_signals_filtered(:, i));
-%     xlabel('Time (s)');
-%     ylabel('Amplitude');
-%     title(['Filtered EEG Signal Channel ', num2str(i)]);
-%     grid on;
-% end
-% 
-% % Frequency domain analysis
-% n = min_samples;
-% f = (0:n-1)*(fs_eeg/n);
-% f = f(1:floor(n/2));
-% 
-% % Plot the frequency domain signals
-% figure;
-% for i = 1:num_channels_to_plot
-%     % Compute FFT for raw signals
-%     fft_raw = fft(eeg_signals_raw(:,i));
-%     P2_raw = abs(fft_raw/n);
-%     P1_raw = P2_raw(1:floor(n/2));
-%     P1_raw(2:end-1) = 2*P1_raw(2:end-1);
-% 
-%     % Compute FFT for filtered signals
-%     fft_filtered = fft(eeg_signals_filtered( :,i));
-%     P2_filtered = abs(fft_filtered/n);
-%     P1_filtered = P2_filtered(1:floor(n/2));
-%     P1_filtered(2:end-1) = 2*P1_filtered(2:end-1);
-% 
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 1);
-%     plot(f, P1_raw);
-%     xlabel('Frequency (Hz)');
-%     ylabel('Magnitude');
-%     title(['Raw EEG Signal Channel ', num2str(i)]);
-%     grid on;
-% 
-%     subplot(num_channels_to_plot, 2, (i-1)*2 + 2);
-%     plot(f, P1_filtered);
-%     xlabel('Frequency (Hz)');
-%     ylabel('Magnitude');
-%     title(['Filtered EEG Signal Channel ', num2str(i)]);
-%     grid on;
-% end
+    % Perform CMC calculation
+    [S_x, S_y, S_xy, f] = compute_power_spectrum(eeg_filtered, emg_filtered, sampling_frequency_eeg, sampling_frequency_emg);
+    
+    num_channels = size(eeg_filtered, 2); % Number of channels
 
-function smoothed_signal = moving_average(signal, window_size)
-    % MOVING_AVERAGE Applica una media mobile al segnale
-    smoothed_signal = filter(ones(1, window_size)/window_size, 1, signal);
+    % Initialize a cell array to store CMC for each channel
+    CMC = zeros(size(S_xy,1), num_channels);
+
+    for ch = 1:num_channels
+        % Calculate average power spectra for the current channel
+        S_x_avg = mean(S_x(:, ch, :), 3);
+        S_y_avg = mean(S_y(:, ch, :), 3);
+        S_xy_avg = mean(S_xy(:, ch, :), 3);
+
+        % Calculate the CMC for the current channel
+        squared_CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
+
+        % Normalize the CMC to be between 0 and 1
+        CMC_normalized = squared_CMC / max(squared_CMC);
+
+        % Store the CMC in the cell array
+        CMC(:,ch) = CMC_normalized;
+    end
+
+    % Perform feature extraction
+    %[features, parameters] = universal_feature_extraction(CMC, sampling_frequency_eeg, 'eeg');
+    
+    % Construct save filename
+    [~, base_name, ~] = fileparts(eeg_file_name);
+    save_filename = fullfile(cmc_features_directory, [base_name '_CMC_features.mat']);
+
+    % Save the CMC features
+    save(save_filename, 'CMC');
+
+    % Print debug information
+    fprintf('Extracted CMC features for all channels and saved to: %s\n', save_filename);
 end
