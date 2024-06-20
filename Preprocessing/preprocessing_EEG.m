@@ -23,7 +23,7 @@ bw = 0.2;            % Bandwidth of the notch filter
 [b_notch, a_notch] = iirnotch(wo, bw);
 
 % Band-pass filter parameters
-Fcut1BPF = 5;
+Fcut1BPF = 2;
 Fcut2BPF = 50; % Adjust this as per your requirements
 Wn = [Fcut1BPF, Fcut2BPF] / (fs_eeg / 2);  % Normalize cutoff frequencies
 [b_bpf, a_bpf] = butter(5, Wn, 'bandpass');
@@ -64,7 +64,7 @@ for file_idx = 1:numel(file_list)
     eeg_filtered_bp = filtfilt(b_bpf, a_bpf, eeg_notched);
 
     % Apply the low-pass filter to each channel
-    % eeg_filtered_lp = filtfilt(b_lp, a_lp, eeg_filtered_bp);
+    eeg_filtered = filtfilt(b_lp, a_lp, eeg_filtered_bp);
 
 %     % Applica la RMS a ciascun canale del segnale filtrato
 %     eeg_rms = zeros(size(eeg_filtered_lp));
@@ -73,7 +73,7 @@ for file_idx = 1:numel(file_list)
 %     end
 
     % Remove padding from the beginning and end
-    eeg_filtered = eeg_filtered_bp(padding_samples+1:end-padding_samples, :);
+%     eeg_filtered = eeg_filtered_lp(padding_samples+1:end-padding_samples, :);
     
     % Determine where to save the segmented signals
     [~, relative_path] = fileparts(file_path);
