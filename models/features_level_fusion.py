@@ -24,7 +24,7 @@ def load_features(directory):
     y = []
     filenames = []
     
-    for file_name in os.listdir(directory):
+    for file_name in sorted(os.listdir(directory)):
         if file_name.endswith('.mat'):
             file_path = os.path.join(directory, file_name)
             data = scipy.io.loadmat(file_path)
@@ -47,7 +47,7 @@ X_emg, y_emg, emg_filenames = load_features(emg_features_directory)
 X_eeg, y_eeg, eeg_filenames = load_features(eeg_features_directory)
 
 # Find the common filenames between EEG and EMG
-common_filenames = set(emg_filenames).intersection(eeg_filenames)
+common_filenames = sorted(set(emg_filenames).intersection(eeg_filenames))
 
 # Initialize lists to store combined features and labels
 X_combined = []
@@ -67,19 +67,20 @@ y_combined = np.array(y_combined)
 
 # Normalize the features
 scaler = StandardScaler()
-X_combined_normalized = scaler.fit_transform(X_combined.reshape(-1, X_combined.shape[-1])).reshape(X_combined.shape)
-# Reshape X_combined_normalized to 2D array
-X_combined_normalized = X_combined_normalized.reshape(X_combined_normalized.shape[0], -1)
+X_combined_reshaped = X_combined.reshape(-1, X_combined.shape[-1])
+X_combined_normalized = scaler.fit_transform(X_combined_reshaped)
+X_combined_normalized = X_combined_normalized.reshape(X_combined.shape)
 
 # Impute NaN values
 imputer = SimpleImputer(strategy='mean')
-X_combined_normalized = imputer.fit_transform(X_combined_normalized)
+X_combined_normalized = imputer.fit_transform(X_combined_normalized.reshape(X_combined_normalized.shape[0], -1))
 
 # Split data into training (80%) and testing (20%) sets
-X_train, X_test, y_train, y_test = train_test_split(X_combined_normalized, y_combined, test_size=0.2, random_state=42)
+random_seed = 42
+X_train, X_test, y_train, y_test = train_test_split(X_combined_normalized, y_combined, test_size=0.2, random_state=random_seed)
 
 # Train the SVM
-svm = SVC(kernel='linear', C=1, random_state=42)
+svm = SVC(kernel='linear', C=10, random_state=random_seed)
 svm.fit(X_train, y_train)
 
 # Predict the test set
@@ -104,7 +105,7 @@ print(classification_report(y_test, y_pred))
 labels = ['LDG', 'MRDG', 'TFSG', 'PPG', 'PG', 'Cut', 'Rest']
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(10, 7))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',xticklabels=labels, yticklabels=labels)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
 plt.title('Confusion Matrix')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')

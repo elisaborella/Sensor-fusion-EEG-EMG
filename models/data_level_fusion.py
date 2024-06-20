@@ -23,7 +23,7 @@ def load_features(directory):
     y = []
     filenames = []
     
-    for file_name in os.listdir(directory):
+    for file_name in sorted(os.listdir(directory)):
         if file_name.endswith('.mat'):
             file_path = os.path.join(directory, file_name)
             data = scipy.io.loadmat(file_path)
@@ -41,25 +41,20 @@ def load_features(directory):
 # Load CMC features
 X, y, filenames = load_features(cmc_features_directory)
 
-
 # Normalize the features
 scaler = StandardScaler()
-X_normalized = scaler.fit_transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
-
-# Reshape normalized features to 2D arrays
-X_normalized = X_normalized.reshape(X_normalized.shape[0], -1)
-
+X_reshaped = X.reshape(-1, X.shape[-1])
+X_normalized = scaler.fit_transform(X_reshaped).reshape(X.shape)
 
 # Impute NaN values
 imputer = SimpleImputer(strategy='mean')
-X_normalized = imputer.fit_transform(X_normalized)
+X_normalized = imputer.fit_transform(X_normalized.reshape(X_normalized.shape[0], -1))
 
 # Split data into training (80%) and testing (20%) sets
 X_train, X_test, y_train, y_test = train_test_split(X_normalized, y, test_size=0.2, random_state=42)
 
-
 # Train the SVM on data
-svm = SVC(kernel='linear', C=1, random_state=42)
+svm = SVC(kernel='linear', C=10, random_state=42)
 svm.fit(X_train, y_train)
 
 # Predict the test set

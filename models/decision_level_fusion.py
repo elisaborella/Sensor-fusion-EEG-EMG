@@ -24,7 +24,7 @@ def load_features(directory):
     y = []
     filenames = []
     
-    for file_name in os.listdir(directory):
+    for file_name in sorted(os.listdir(directory)):
         if file_name.endswith('.mat'):
             file_path = os.path.join(directory, file_name)
             data = scipy.io.loadmat(file_path)
@@ -99,7 +99,7 @@ plt.ylabel('Actual')
 plt.show()
 
 # Train the SVM on EEG data
-svm_eeg = SVC(kernel='linear', C=1, random_state=42)
+svm_eeg = SVC(kernel='linear', C=10, random_state=42)
 svm_eeg.fit(X_train_eeg, y_train_eeg)
 
 # Predict the test set for EEG
@@ -127,7 +127,6 @@ plt.title('Confusion Matrix - EEG')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
-
 
 def majority_vote(predictions):
     fused_predictions = []
@@ -161,7 +160,7 @@ print(classification_report(y_test, y_pred_fused))
 # Confusion matrix for fused model
 cm_fused = confusion_matrix(y_test, y_pred_fused)
 plt.figure(figsize=(10, 7))
-sns.heatmap(cm_fused, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y_emg), yticklabels=np.unique(y_emg))
+sns.heatmap(cm_fused, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
 plt.title('Confusion Matrix - Fused Model')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
