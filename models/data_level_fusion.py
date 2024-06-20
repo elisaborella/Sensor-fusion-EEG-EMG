@@ -43,15 +43,13 @@ X, y, filenames = load_features(cmc_features_directory)
 
 # Normalize the features
 scaler = StandardScaler()
-X_reshaped = X.reshape(-1, X.shape[-1])
-X_normalized = scaler.fit_transform(X_reshaped).reshape(X.shape)
+X = scaler.fit_transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
+# Reshape X_combined_normalized to 2D array
+X = X.reshape(X.shape[0], -1)
 
-# Impute NaN values
-imputer = SimpleImputer(strategy='mean')
-X_normalized = imputer.fit_transform(X_normalized.reshape(X_normalized.shape[0], -1))
 
 # Split data into training (80%) and testing (20%) sets
-X_train, X_test, y_train, y_test = train_test_split(X_normalized, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train the SVM on data
 svm = SVC(kernel='linear', C=10, random_state=42)
