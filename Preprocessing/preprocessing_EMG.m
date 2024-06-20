@@ -28,9 +28,8 @@ wo = 60 / (fs_emg / 2);  % Normalize the frequency
 bw = 0.2;            % Bandwidth of the notch filter
 [b_notch, a_notch] = iirnotch(wo, bw);
 
-% Segmentation parameters
-window_length_ms = 400;
-overlap_percentage = 50;
+% Definisci la lunghezza della finestra per la RMS (in campioni)
+window_length_rms = 20; % ad esempio, 1 secondo per un fs di 250 Hz
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
@@ -61,7 +60,7 @@ for file_idx = 1:numel(file_list)
     end
     
     first_window_size = 200;
-    second_window_size = 20;
+    second_window_size = 200;
     emg_signals_smoothed = zeros(size(emg_signals,1), size(emg_signals,2));
     for i = 1:size(emg_signals,2)
         emg_signals_smoothed(:,i) = moving_average_array(emg_signals(:,i), first_window_size);
@@ -74,15 +73,16 @@ for file_idx = 1:numel(file_list)
     emg_signals(~isfinite(emg_signals)) = 0;
 
     % Apply the notch filter to each channel
-    emg_notched = filtfilt(b_notch, a_notch, emg_signals);
+    % emg_notched = filtfilt(b_notch, a_notch, emg_signals);
 
-    % Apply the band-pass filter to each channel
-    emg_filtered = filtfilt(b_bpf, a_bpf, emg_notched);
+%     emg_rms = zeros(size(emg_signals));
+%     Applica la RMS a ciascun canale del segnale filtrato
+%     for ch = 1:size(emg_signals, 2)
+%         emg_rms(:, ch) = sqrt(movmean(emg_signals(:, ch).^2, window_length_rms));
+%     end
     
-%     rms_window_length = 50;
-%     rms_window = dsp.movingRMS(rms_window_length);
-% 
-%     emg_filtered = rms_window(rms_window_length);
+    % Apply the band-pass filter to each channel
+    emg_filtered = filtfilt(b_bpf, a_bpf, emg_signals);
     
     %% SAVE FILTERED SIGNAL
     % Determine where to save the segmented signals
@@ -99,9 +99,4 @@ for file_idx = 1:numel(file_list)
     
     % Print debug information
     fprintf('Saved filtered segment to: %s\n', save_path);
-end
-
-function rms_signal = rms_calc(signal, window_size)
-    % RMS_CALC Calculate the RMS of the signal with a moving window
-    rms_signal = sqrt(movmean(signal.^2, window_size));
 end

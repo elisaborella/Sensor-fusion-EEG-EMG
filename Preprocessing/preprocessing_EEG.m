@@ -33,14 +33,11 @@ Fcut_lp = 60;  % Cutoff frequency for low-pass filter
 Wn_lp = Fcut_lp / (fs_eeg / 2);  % Normalize cutoff frequency for low-pass
 [b_lp, a_lp] = butter(5, Wn_lp, 'low');
 
-% Padding parameters (50 samples at the beginning and end to remove)
+%Padding parameters (50 samples at the beginning and end to remove)
 padding_samples = 50;
 
-% Segmentation parameters
-window_length_ms = 550;
-overlap_percentage = 60;
-window_length_samples = round(window_length_ms / 1000 * fs_eeg);
-stride_samples = round(window_length_samples * (1 - overlap_percentage / 100));
+% Definisci la lunghezza della finestra per la RMS (in campioni)
+window_length_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
@@ -67,10 +64,16 @@ for file_idx = 1:numel(file_list)
     eeg_filtered_bp = filtfilt(b_bpf, a_bpf, eeg_notched);
 
     % Apply the low-pass filter to each channel
-    eeg_filtered_lp = filtfilt(b_lp, a_lp, eeg_filtered_bp);
+    % eeg_filtered_lp = filtfilt(b_lp, a_lp, eeg_filtered_bp);
+
+%     % Applica la RMS a ciascun canale del segnale filtrato
+%     eeg_rms = zeros(size(eeg_filtered_lp));
+%     for ch = 1:size(eeg_filtered_lp, 2)
+%         eeg_rms(:, ch) = sqrt(movmean(eeg_filtered_lp(:, ch).^2, window_length_rms));
+%     end
 
     % Remove padding from the beginning and end
-    eeg_filtered = eeg_filtered_lp(padding_samples+1:end-padding_samples, :);
+    eeg_filtered = eeg_filtered_bp(padding_samples+1:end-padding_samples, :);
     
     % Determine where to save the segmented signals
     [~, relative_path] = fileparts(file_path);
