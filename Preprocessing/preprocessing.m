@@ -2,8 +2,8 @@ function preprocessing()
 %PREPROCESSING Summary of this function goes here
 %   Detailed explanation goes here
 
-% emg_signals = preprocessing_emg()
-% eeg_signals = preprocessing_eeg()
+preprocessing_EMG;
+% eeg_signals = preprocessing_eeg();
 
 %% Retrieving segnali
 % Define paths and constants
@@ -40,48 +40,48 @@ for file_idx = 1:numel(emg_file_list)
     % Definisci la lunghezz a della finestra per la RMS (in campioni)
     window_length_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
 
-    for ch = 1:size(emg, 2)
-        emg = abs(emg);
-        rest_on = size(emg,1) / sampling_frequency_emg - 3;
-%         emg = emg()
-
-%         first_window_size = 800;
-%         second_window_size = 200;
-%         emg_signals_smoothed = zeros(size(emg,1), size(emg,2));
-%         for i = 1:size(emg,2)
-%             emg_signals_smoothed(:,i) = moving_average_array(emg(:,i), first_window_size);
-%             emg_signals_smoothed(:,i) = moving_average_array(emg_signals_smoothed(:,i), second_window_size);
+%     for ch = 1:size(emg, 2)
+%         emg = abs(emg);
+%         rest_on = size(emg,1) / sampling_frequency_emg - 3;
+% %         emg = emg()
+% 
+% %         first_window_size = 800;
+% %         second_window_size = 200;
+% %         emg_signals_smoothed = zeros(size(emg,1), size(emg,2));
+% %         for i = 1:size(emg,2)
+% %             emg_signals_smoothed(:,i) = moving_average_array(emg(:,i), first_window_size);
+% %             emg_signals_smoothed(:,i) = moving_average_array(emg_signals_smoothed(:,i), second_window_size);
+% %         end
+% % 
+% %         emg_rms = zeros(size(emg_signals_smoothed));
+% %         % Applica la RMS a ciascun canale del segnale filtrato
+% %             
+% %         emg_rms(:, ch) = sqrt(movmean(emg_signals_smoothed(:, ch).^2, window_length_rms));
+% % 
+% 
+% %         % Applicazione Threshold
+% %         Th = (max(emg_rms) - min(emg_rms)) / 3 + min(emg_rms);
+%         
+%         % Find intervals above the threshold
+% %         above_threshold = emg_rms > Th;
+% %         segments = find_segments(above_threshold);
+%     
+%         t = (0:size(emg,1)-1) / sampling_frequency_emg;
+%         segments_time = size(emg,1) / sampling_frequency_emg;
+% 
+%         figure;
+%         plot(t, emg(:, ch))
+%         hold on;
+%         for i = 1:size(segments_time, 1)
+%             x = [rest_on, rest_on];
+%             line(x, ylim, 'Color', 'r', 'LineStyle', '--');
 %         end
+%         xlabel('Time (s)');
+%         ylabel('Amplitude (\muV)');
+%         title('EMG Signal with Segmentation Points');
+%         hold off;
 % 
-%         emg_rms = zeros(size(emg_signals_smoothed));
-%         % Applica la RMS a ciascun canale del segnale filtrato
-%             
-%         emg_rms(:, ch) = sqrt(movmean(emg_signals_smoothed(:, ch).^2, window_length_rms));
-% 
-
-%         % Applicazione Threshold
-%         Th = (max(emg_rms) - min(emg_rms)) / 3 + min(emg_rms);
-        
-        % Find intervals above the threshold
-%         above_threshold = emg_rms > Th;
-%         segments = find_segments(above_threshold);
-    
-        t = (0:size(emg,1)-1) / sampling_frequency_emg;
-        segments_time = size(emg,1) / sampling_frequency_emg;
-
-        figure;
-        plot(t, emg(:, ch))
-        hold on;
-        for i = 1:size(segments_time, 1)
-            x = [rest_on, rest_on];
-            line(x, ylim, 'Color', 'r', 'LineStyle', '--');
-        end
-        xlabel('Time (s)');
-        ylabel('Amplitude (\muV)');
-        title('EMG Signal with Segmentation Points');
-        hold off;
-
-    end
+%     end
 
     % Duration of each segment in seconds
     DUR = 2;  % You can adjust this duration as needed

@@ -1,22 +1,21 @@
-%clear all
+clear all
 
 %%
-preprocessing();
+preprocessing()
 %%
 
 % % %% TEST
 emg_data = load("unsegmented_filtered_EMG_data\S1_R1_G7\S1_R1_G7.mat");
-eeg_data = load("unsegmented_filtered_EEG_data\S1_R3_G6\S1_R3_G6.mat");
+% eeg_data = load("unsegmented_filtered_EEG_data\S1_R3_G6\S1_R3_G6.mat");
 % % 
-emg_signal = emg_data.emg_filtered;
+emg_filtered_signal = emg_data.emg_filtered;
 fs_emg = emg_data.fs_emg;
-eeg_signal = eeg_data.eeg_filtered;
-fs_eeg = eeg_data.fs_eeg;
+% eeg_signal = eeg_data.eeg_filtered;
+% fs_eeg = eeg_data.fs_eeg;
 % % 
 %plotter(emg_signal, fs_emg, "EMG filtered signal");
 % plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
-emg_signal = emg_signal(1:5*fs_emg,:);
 [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
 plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
 
@@ -79,8 +78,6 @@ for file_idx = 1:numel(file_list)
 
     % Access the filtered EMG data
     emg_filtered = emg_data.emg_filtered;
-
-    emg_filtered = emg_filtered(1:5*fs_emg,:);
 
     % Perform feature extraction
     [features, parameters] = universal_feature_extraction(emg_filtered, sampling_frequency_emg, 'emg');
@@ -165,8 +162,6 @@ for file_idx = 1:numel(emg_file_list)
     % Access the filtered EEG and EMG data
     eeg_filtered = eeg_data.eeg_filtered;
     emg_filtered = emg_data.emg_filtered;
-
-    emg_filtered = emg_filtered(1:5*fs_emg,:);
 
     % Perform CMC calculation
     [S_x, S_y, S_xy, f, fs] = compute_power_spectrum(eeg_filtered, emg_filtered, sampling_frequency_eeg, sampling_frequency_emg);
