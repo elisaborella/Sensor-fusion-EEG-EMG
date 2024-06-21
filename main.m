@@ -1,58 +1,63 @@
-clear all
+%clear all
+
+%%
+preprocessing();
+%%
 
 % % %% TEST
-% emg_data = load("unsegmented_filtered_EMG_data\S1_R3_G6\S1_R3_G6.mat");
+emg_data = load("unsegmented_filtered_EMG_data\S1_R1_G7\S1_R1_G7.mat");
 eeg_data = load("unsegmented_filtered_EEG_data\S1_R3_G6\S1_R3_G6.mat");
 % % 
-% emg_signal = emg_data.emg_filtered;
-% fs_emg = emg_data.fs_emg;
+emg_signal = emg_data.emg_filtered;
+fs_emg = emg_data.fs_emg;
 eeg_signal = eeg_data.eeg_filtered;
 fs_eeg = eeg_data.fs_eeg;
 % % 
-% plotter(emg_signal, fs_emg, "EMG signal");
-plotter(eeg_signal, fs_eeg, "EEG signal");
+%plotter(emg_signal, fs_emg, "EMG filtered signal");
+% plotter(eeg_signal, fs_eeg, "EEG signal");
 %%
-% [S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
-% plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
-% 
-% CMC = zeros(size(S_xy,1));
-% for i = 1 :size(S_xy,2)
-%     S_x_avg = mean(S_x(:, i, :), 3);
-%     S_y_avg = mean(S_y(:, i, :), 3);
-%     S_xy_avg = mean(S_xy(:, i, :), 3);
-%     % Calcolare il CMC
-%     squared_CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
-%     
-%     % Normalizzare il CMC per ottenere valori tra 0 e 1
-%     CMC(:,i) = squared_CMC / max(squared_CMC);
-%     
-%     % Visualizzare il CMC
-%     figure;
-%     plot(fs, CMC(:,i));
-%     xlabel('Frequency (Hz)');
-%     ylabel('CMC');
-%     title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', i));
-%     grid on;
-%     hold on;
-%     
-%     % Definire le sub-bande di frequenza
-%     sub_bands = [6 8; 8 12; 13 20; 20 30; 13 30; 30 60; 60 80; 30 80];
-%     
-%     % Aggiungere le linee verticali rosse per ogni sub-banda
-%     for j = 1:size(sub_bands, 1)
-%         xline(sub_bands(j, 1), 'r--');
-%         xline(sub_bands(j, 2), 'r--');
-%     end
-%     
-%     % Legenda delle sub-bande
-%     legend_labels = {'Low-α', 'α', 'Low-β', 'High-β', 'β', 'Low-γ', 'High-γ', 'γ'};
-%     for j = 1:size(sub_bands, 1)
-%         % Centrare il testo della legenda tra le linee delle sub-bande
-%         text(mean(sub_bands(j, :)), max(CMC(:,i))*0.9, legend_labels{j}, 'Color', 'r', 'HorizontalAlignment', 'center');
-%     end
-%     
-%     hold off;
-% end
+emg_signal = emg_signal(1:5*fs_emg,:);
+[S_x, S_y, S_xy, fs] = compute_power_spectrum(eeg_signal, emg_signal, fs_eeg, fs_emg);
+plot_power_spectrum(S_x, S_y, S_xy, fs_eeg);
+
+CMC = zeros(size(S_xy,1));
+for i = 1 :size(S_xy,2)
+    S_x_avg = mean(S_x(:, i, :), 3);
+    S_y_avg = mean(S_y(:, i, :), 3);
+    S_xy_avg = mean(S_xy(:, i, :), 3);
+    % Calcolare il CMC
+    squared_CMC = (abs(S_xy(:,i).^2) ./ (S_x(:,i) .* S_y(:,i)));
+    
+    % Normalizzare il CMC per ottenere valori tra 0 e 1
+    CMC(:,i) = squared_CMC / max(squared_CMC);
+    
+    % Visualizzare il CMC
+    figure;
+    plot(fs, CMC(:,i));
+    xlabel('Frequency (Hz)');
+    ylabel('CMC');
+    title(sprintf('Magnitude Square Coherence (CMC) - Channel %d', i));
+    grid on;
+    hold on;
+    
+    % Definire le sub-bande di frequenza
+    sub_bands = [6 8; 8 12; 13 20; 20 30; 13 30; 30 60; 60 80; 30 80];
+    
+    % Aggiungere le linee verticali rosse per ogni sub-banda
+    for j = 1:size(sub_bands, 1)
+        xline(sub_bands(j, 1), 'r--');
+        xline(sub_bands(j, 2), 'r--');
+    end
+    
+    % Legenda delle sub-bande
+    legend_labels = {'Low-α', 'α', 'Low-β', 'High-β', 'β', 'Low-γ', 'High-γ', 'γ'};
+    for j = 1:size(sub_bands, 1)
+        % Centrare il testo della legenda tra le linee delle sub-bande
+        text(mean(sub_bands(j, :)), max(CMC(:,i))*0.9, legend_labels{j}, 'Color', 'r', 'HorizontalAlignment', 'center');
+    end
+    
+    hold off;
+end
 
 %% EMG FEATURES EXTRACTION
 % Define paths and constants
@@ -74,6 +79,8 @@ for file_idx = 1:numel(file_list)
 
     % Access the filtered EMG data
     emg_filtered = emg_data.emg_filtered;
+
+    emg_filtered = emg_filtered(1:5*fs_emg,:);
 
     % Perform feature extraction
     [features, parameters] = universal_feature_extraction(emg_filtered, sampling_frequency_emg, 'emg');
@@ -159,6 +166,8 @@ for file_idx = 1:numel(emg_file_list)
     eeg_filtered = eeg_data.eeg_filtered;
     emg_filtered = emg_data.emg_filtered;
 
+    emg_filtered = emg_filtered(1:5*fs_emg,:);
+
     % Perform CMC calculation
     [S_x, S_y, S_xy, f, fs] = compute_power_spectrum(eeg_filtered, emg_filtered, sampling_frequency_eeg, sampling_frequency_emg);
     
@@ -174,10 +183,10 @@ for file_idx = 1:numel(emg_file_list)
         S_xy_avg = mean(S_xy(:, ch, :), 3);
 
         % Calculate the CMC for the current channel
-        squared_CMC = (abs(S_xy_avg).^2) ./ (S_x_avg .* S_y_avg);
+        squared_CMC = (abs(S_xy(:,ch)).^2) ./ (S_x(:,ch) .* S_y(:,ch));
 
         % Normalize the CMC to be between 0 and 1
-        CMC_normalized = squared_CMC / max(squared_CMC);
+        CMC_normalized = sqrt(squared_CMC);% / max(squared_CMC);
         
         % Handle NaN in CMC_normalized
         if any(isnan(CMC_normalized))
