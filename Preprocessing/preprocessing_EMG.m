@@ -1,3 +1,6 @@
+function preprocessing_EMG()
+%PREPROCESSING_EMG Summary of this function goes here
+%   Detailed explanation goes here
 clear all
 
 % Directory containing your EMG data files
@@ -18,18 +21,20 @@ file_list = dir(fullfile(data_dir, '**', '*.mat'));
 fs_emg = 200;
 
 % Band-pass filter parameters
-Fcut1BPF = 10;
+F1HPF = 10;
 Fcut2BPF = 99; % Adjust this as per your requirements
-Wn = [Fcut1BPF, Fcut2BPF] / (fs_emg / 2);  % Normalize cutoff frequencies
+Wn = [F1HPF, Fcut2BPF] / (fs_emg / 2);  % Normalize cutoff frequencies
 [b_bpf, a_bpf] = butter(5, Wn, 'bandpass');
+
+% High-pass filter parameters
+F1HPF = 2.5;  % Cutoff frequency for high-pass filter in Hz
+Wn = F1HPF / (fs_emg / 2);  % Normalize cutoff frequency
+[b_hpf, a_hpf] = butter(5, Wn, 'high');  % Design the high-pass filter
 
 % Notch filter parameters
 wo = 60 / (fs_emg / 2);  % Normalize the frequency
 bw = 0.2;            % Bandwidth of the notch filter
 [b_notch, a_notch] = iirnotch(wo, bw);
-
-% Definisci la lunghezza della finestra per la RMS (in campioni)
-window_length_rms = 20; % ad esempio, 1 secondo per un fs di 250 Hz
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
@@ -59,30 +64,20 @@ for file_idx = 1:numel(file_list)
         emg_signals(:, channel_idx) = channel_data;
     end
     
-    first_window_size = 200;
-    second_window_size = 200;
-    emg_signals_smoothed = zeros(size(emg_signals,1), size(emg_signals,2));
-    for i = 1:size(emg_signals,2)
-        emg_signals_smoothed(:,i) = moving_average_array(emg_signals(:,i), first_window_size);
-        emg_signals_smoothed(:,i) = moving_average_array(emg_signals_smoothed(:,i), second_window_size);
-    end
     % Normalize the signals (z-score normalization)
-    emg_signals = (emg_signals_smoothed - mean(emg_signals_smoothed, 1)) ./ std(emg_signals_smoothed, 0, 1);
+    emg_signals = (emg_signals - mean(emg_signals, 1)) ./ std(emg_signals, 0, 1);
 
     % Ensure normalization did not introduce non-finite values
     emg_signals(~isfinite(emg_signals)) = 0;
 
     % Apply the notch filter to each channel
     % emg_notched = filtfilt(b_notch, a_notch, emg_signals);
-
-%     emg_rms = zeros(size(emg_signals));
-%     Applica la RMS a ciascun canale del segnale filtrato
-%     for ch = 1:size(emg_signals, 2)
-%         emg_rms(:, ch) = sqrt(movmean(emg_signals(:, ch).^2, window_length_rms));
-%     end
     
     % Apply the band-pass filter to each channel
     emg_filtered = filtfilt(b_bpf, a_bpf, emg_signals);
+
+    % Apply the high-pass filter to each channel
+    emg_filtered = filtfilt(b_hpf, a_hpf, emg_filtered);
     
     %% SAVE FILTERED SIGNAL
     % Determine where to save the segmented signals
@@ -100,3 +95,5 @@ for file_idx = 1:numel(file_list)
     % Print debug information
     fprintf('Saved filtered segment to: %s\n', save_path);
 end
+end
+

@@ -1,4 +1,4 @@
-clear all
+function preprocessing_EEG()
 
 % Directory containing your EEG data files
 data_dir = 'BMIS_EEG_DATA\data\mat_data\';  % Adjust this path as needed
@@ -37,7 +37,8 @@ Wn_lp = Fcut_lp / (fs_eeg / 2);  % Normalize cutoff frequency for low-pass
 padding_samples = 50;
 
 % Definisci la lunghezza della finestra per la RMS (in campioni)
-window_length_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
+window_leng
+th_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
