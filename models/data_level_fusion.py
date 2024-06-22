@@ -15,10 +15,19 @@ cmc_features_directory = '../CMC_features'
 
 
 def extract_label_from_filename(filename):
-    # Extract class label from filename, assuming format 'S1_R1_G1_filtered_features.mat'
-    label_str = filename.split('_')[2]
-    label = int(label_str[1:])  # Remove 'G' and convert to integer
+    parts = filename.split('_')
+
+    # Extract the part that contains the label
+    label_part = parts[1]
+
+    # Extract the numeric part of the label (removing 'G' from 'G1')
+    label_str = label_part[1:]
+
+    # Convert the numeric part to integer
+    label = int(label_str)
+
     return label
+
 
 
 def load_features(directory):
@@ -32,6 +41,13 @@ def load_features(directory):
             data = scipy.io.loadmat(file_path)
             features = data['features']
             features = features.T  # Transpose to have features as rows and channels as columns
+
+            # If any feature value is null (NaN), replace it with the mean of the features
+            if np.isnan(features).any():
+                nan_indices = np.isnan(features)
+                feature_means = np.nanmean(features, axis=0)
+                features[nan_indices] = np.take(feature_means, np.where(nan_indices)[1])
+
             X.append(features)
 
             # Extract label from filename

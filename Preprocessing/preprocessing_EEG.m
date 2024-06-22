@@ -37,8 +37,7 @@ Wn_lp = Fcut_lp / (fs_eeg / 2);  % Normalize cutoff frequency for low-pass
 padding_samples = 50;
 
 % Definisci la lunghezza della finestra per la RMS (in campioni)
-window_leng
-th_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
+window_length_rms = 250; % ad esempio, 1 secondo per un fs di 250 Hz
 
 % Iterate through each file
 for file_idx = 1:numel(file_list)
@@ -74,7 +73,7 @@ for file_idx = 1:numel(file_list)
 %     end
 
     % Remove padding from the beginning and end
-%     eeg_filtered = eeg_filtered_lp(padding_samples+1:end-padding_samples, :);
+    eeg_filtered = eeg_filtered(padding_samples+1:end-padding_samples, :);
     
     % Determine where to save the segmented signals
     [~, relative_path] = fileparts(file_path);

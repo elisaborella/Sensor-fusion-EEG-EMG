@@ -63,6 +63,8 @@ for file_idx = 1:numel(file_list)
         
         emg_signals(:, channel_idx) = channel_data;
     end
+
+    emg_signals = emg_signals(size(emg_signals,1)-5*fs_emg:end,:);
     
     % Normalize the signals (z-score normalization)
     emg_signals = (emg_signals - mean(emg_signals, 1)) ./ std(emg_signals, 0, 1);

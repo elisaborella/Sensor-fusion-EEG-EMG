@@ -64,9 +64,9 @@ X_emg_normalized = imputer.fit_transform(X_emg_normalized)
 X_eeg_normalized = imputer.fit_transform(X_eeg_normalized)
 
 # Split data into training (80%) and testing (20%) sets
-X_train_emg, X_test_emg, y_train_emg, y_test_emg = train_test_split(X_emg_normalized, y_emg, test_size=0.2,
+X_train_emg, X_test_emg, y_train_emg, y_test_emg = train_test_split(X_emg_normalized, y_emg, test_size=0.15,
                                                                     random_state=42)
-X_train_eeg, X_test_eeg, y_train_eeg, y_test_eeg = train_test_split(X_eeg_normalized, y_eeg, test_size=0.2,
+X_train_eeg, X_test_eeg, y_train_eeg, y_test_eeg = train_test_split(X_eeg_normalized, y_eeg, test_size=0.15,
                                                                     random_state=42)
 
 common_filenames = list(set(emg_filenames).intersection(eeg_filenames))
