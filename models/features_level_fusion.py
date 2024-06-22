@@ -11,8 +11,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Define paths and constants
-emg_features_directory = '../EMG_features'
-eeg_features_directory = '../EEG_features'
+emg_features_directory = '../Data/EMG_features'
+eeg_features_directory = '../Data/EEG_features'
 
 
 def extract_label_from_filename(filename):

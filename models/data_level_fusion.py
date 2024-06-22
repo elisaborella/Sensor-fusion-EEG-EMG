@@ -11,7 +11,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Define paths and constants
-cmc_features_directory = '../CMC_features'
+cmc_features_directory = '../Data/CMC_features'
 
 
 def extract_label_from_filename(filename):
