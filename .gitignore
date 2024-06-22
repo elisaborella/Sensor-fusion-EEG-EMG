@@ -1,19 +1,22 @@
 # Ignora CMC_features e il suo contenuto
-CMC_features/
-CMC_features/**
+Data/CMC_features/
+Data/CMC_features/**
 
 # Ignora EEG_features e il suo contenuto
-EEG_features/
-EEG_features/**
+Data/EEG_features/
+Data/EEG_features/**
 
 # Ignora EMG_features e il suo contenuto
-EMG_features/
-EMG_features/**
+Data/EMG_features/
+Data/EMG_features/**
 
 # Ignora unsegmented_filtered_EEG_data e il suo contenuto
-unsegmented_filtered_EEG_data/
-unsegmented_filtered_EEG_data/**
+Data/filtered_EEG_data/
+Data/filtered_EEG_data/**
 
 # Ignora unsegmented_filtered_EMG_data e il suo contenuto
-unsegmented_filtered_EMG_data/
-unsegmented_filtered_EMG_data/**
+Data/filtered_EMG_data/
+Data/filtered_EMG_data/**
+
+# Ignora file asv
+*.asv
