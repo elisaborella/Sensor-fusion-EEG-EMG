@@ -14,7 +14,7 @@ function extract_cmc_feat(eeg_data_directory, emg_data_directory, features_direc
     end
     
     % Extract subject and trial information from EEG file list
-    subject_trial_files = extract_trials(eeg_file_list);
+    subject_trial_files = extract_trials(emg_file_list);
     
     % Process each subject and trial
     subject_keys = keys(subject_trial_files);
