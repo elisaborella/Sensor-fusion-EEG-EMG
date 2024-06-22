@@ -4,7 +4,8 @@ import scipy.io
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, \
+    confusion_matrix
 from sklearn.impute import SimpleImputer
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -13,31 +14,34 @@ import matplotlib.pyplot as plt
 emg_features_directory = '../EMG_features'
 eeg_features_directory = '../EEG_features'
 
+
 def extract_label_from_filename(filename):
     # Extract class label from filename, assuming format 'S1_R1_G1_filtered_features.mat'
     label_str = filename.split('_')[2]  # Assuming label is the third part after splitting by '_'
     label = int(label_str[1:])  # Remove 'G' and convert to integer
     return label
 
+
 def load_features(directory):
     X = []
     y = []
     filenames = []
-    
-    for file_name in os.listdir(directory):
+
+    for file_name in sorted(os.listdir(directory)):
         if file_name.endswith('.mat'):
             file_path = os.path.join(directory, file_name)
             data = scipy.io.loadmat(file_path)
             features = data['features']
             features = features.T  # Transpose to have features as rows and channels as columns
             X.append(features)
-            
+
             # Extract label from filename
             label = extract_label_from_filename(file_name)
             y.append(label)
             filenames.append(file_name)
-    
+
     return np.array(X), np.array(y), filenames
+
 
 # Load EMG features
 X_emg, y_emg, emg_filenames = load_features(emg_features_directory)
@@ -60,8 +64,10 @@ X_emg_normalized = imputer.fit_transform(X_emg_normalized)
 X_eeg_normalized = imputer.fit_transform(X_eeg_normalized)
 
 # Split data into training (80%) and testing (20%) sets
-X_train_emg, X_test_emg, y_train_emg, y_test_emg = train_test_split(X_emg_normalized, y_emg, test_size=0.2, random_state=42)
-X_train_eeg, X_test_eeg, y_train_eeg, y_test_eeg = train_test_split(X_eeg_normalized, y_eeg, test_size=0.2, random_state=42)
+X_train_emg, X_test_emg, y_train_emg, y_test_emg = train_test_split(X_emg_normalized, y_emg, test_size=0.15,
+                                                                    random_state=42)
+X_train_eeg, X_test_eeg, y_train_eeg, y_test_eeg = train_test_split(X_eeg_normalized, y_eeg, test_size=0.15,
+                                                                    random_state=42)
 
 common_filenames = list(set(emg_filenames).intersection(eeg_filenames))
 common_indices_emg = [emg_filenames.index(filename) for filename in common_filenames]
@@ -99,7 +105,7 @@ plt.ylabel('Actual')
 plt.show()
 
 # Train the SVM on EEG data
-svm_eeg = SVC(kernel='linear', C=1, random_state=42)
+svm_eeg = SVC(kernel='linear', C=10, random_state=42)
 svm_eeg.fit(X_train_eeg, y_train_eeg)
 
 # Predict the test set for EEG
@@ -136,6 +142,7 @@ def majority_vote(predictions):
         fused_predictions.append(combined_prediction)
     return np.array(fused_predictions)
 
+
 # Perform decision-level fusion on common filenames
 predictions_emg = svm_emg.predict(X_emg_normalized[common_indices_emg])
 predictions_eeg = svm_eeg.predict(X_eeg_normalized[common_indices_eeg])
@@ -161,7 +168,7 @@ print(classification_report(y_test, y_pred_fused))
 # Confusion matrix for fused model
 cm_fused = confusion_matrix(y_test, y_pred_fused)
 plt.figure(figsize=(10, 7))
-sns.heatmap(cm_fused, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y_emg), yticklabels=np.unique(y_emg))
+sns.heatmap(cm_fused, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
 plt.title('Confusion Matrix - Fused Model')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
